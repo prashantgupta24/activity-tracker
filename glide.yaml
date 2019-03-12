@@ -1,4 +1,9 @@
-package: github.com/activitytracker
+package: github.com/activity-tracker
 import:
 - package: github.com/go-vgo/robotgo
   version: ^0.80.0
+- package: github.com/prashantgupta24/activity-tracker
+  version: ^0.0.2
+  subpackages:
+  - src/activity
+  - src/mouse

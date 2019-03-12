@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/activitytracker/src/mouse"
 	"github.com/go-vgo/robotgo"
+	"github.com/prashantgupta24/activity-tracker/src/mouse"
 )
 
 func StartTracker(timeToCheck time.Duration) (activity chan bool, quit chan struct{}) {
