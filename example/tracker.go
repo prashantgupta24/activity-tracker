@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/activity-tracker/src/activity"
+	"github.com/prashantgupta24/activity-tracker/src/activity"
 )
 
 func main() {
