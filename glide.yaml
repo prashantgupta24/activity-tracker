@@ -1,0 +1,4 @@
+package: github.com/activitytracker
+import:
+- package: github.com/go-vgo/robotgo
+  version: ^0.80.0
