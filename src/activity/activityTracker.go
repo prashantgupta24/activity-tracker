@@ -75,7 +75,7 @@ func isMouseClicked(timeToCheck time.Duration) (clickComm, quit chan struct{}) {
 					go func(registrationFree chan struct{}) {
 						fmt.Printf("adding reg\n\n\n")
 						mleft := robotgo.AddEvent("mleft")
-						if mleft == 0 {
+						if mleft {
 							fmt.Println("mleft clicked")
 							clickComm <- struct{}{}
 							registrationFree <- struct{}{}

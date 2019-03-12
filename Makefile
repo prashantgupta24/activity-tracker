@@ -1,2 +1,2 @@
-start:
-	go run src/cmd/main.go
+example-start:
+	go run example/tracker.go
