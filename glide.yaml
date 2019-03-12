@@ -1,4 +1,4 @@
-package: github.com/activity-tracker
+package: github.com/prashantgupta24/activity-tracker
 import:
 - package: github.com/go-vgo/robotgo
   version: ^0.80.0
