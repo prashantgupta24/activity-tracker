@@ -1,56 +1,65 @@
 package activity
 
 import (
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/go-vgo/robotgo"
 	"github.com/prashantgupta24/activity-tracker/src/mouse"
 )
 
-func StartTracker(timeToCheck time.Duration) (activity chan bool, quit chan struct{}) {
+func (tracker *ActivityTracker) Start() (heartbeatCh chan *Heartbeat, quit chan struct{}) {
 
-	comm, quitMouseClickHandler := isMouseClicked(timeToCheck)
+	comm, quitMouseClickHandler := isMouseClicked(tracker)
 
-	activity = make(chan bool)
+	heartbeatCh = make(chan *Heartbeat, 1)
 	quit = make(chan struct{})
-	ticker := time.NewTicker(time.Second * timeToCheck)
 
-	go func() {
+	go func(tracker *ActivityTracker, heartbeatCh chan *Heartbeat, quit chan struct{}) {
+		timeToCheck := tracker.TimeToCheck
+		ticker := time.NewTicker(time.Second * timeToCheck)
 		isIdle := true
 		lastMousePos := mouse.GetPosition()
 		for {
 			select {
 			case <-ticker.C:
-				//fmt.Println("ticked : ", isIdle)
+				//log.Printf("tracker checking at %v\n", time.Now())
 				currentMousePos := mouse.GetPosition()
+				var heartbeat *Heartbeat
 				if isIdle && isPointerIdle(currentMousePos, lastMousePos) {
-					fmt.Printf("no activity detected in the last %v seconds ...\n", timeToCheck)
-					activity <- false
+					//log.Printf("no activity detected in the last %v seconds ...\n", int(timeToCheck))
+					heartbeat = &Heartbeat{
+						IsActivity: false,
+						Time:       time.Now(),
+					}
 				} else {
-					fmt.Printf("activity detected in the last %v seconds ...\n", timeToCheck)
-					activity <- true
+					//log.Printf("activity detected in the last %v seconds ...\n", int(timeToCheck))
+					heartbeat = &Heartbeat{
+						IsActivity: true,
+						Time:       time.Now(),
+					}
 					lastMousePos = currentMousePos
 				}
+				heartbeatCh <- heartbeat
 				isIdle = true
 			case <-comm:
 				isIdle = false
-				//fmt.Println("val received: ", isIdle)
+				//log.Printf("value received: %v\n", isIdle)
 			case <-quit:
-				fmt.Println("stopped activity tracker")
+				log.Printf("stopping activity tracker\n")
 				quitMouseClickHandler <- struct{}{}
-				robotgo.StopEvent()
+				//robotgo.StopEvent()
 				return
 			}
 		}
-	}()
+	}(tracker, heartbeatCh, quit)
 
-	return activity, quit
+	return heartbeatCh, quit
 }
 
 func isPointerIdle(currentMousePos, lastMousePos *mouse.Position) bool {
-	// fmt.Println("current : ", currentMousePos)
-	// fmt.Println("last : ", lastMousePos)
+	//log.Printf("current mouse position: %v\n", currentMousePos)
+	//log.Printf("last mouse position: %v\n", lastMousePos)
 	if currentMousePos.MouseX == lastMousePos.MouseX &&
 		currentMousePos.MouseY == lastMousePos.MouseY {
 		return true
@@ -58,9 +67,9 @@ func isPointerIdle(currentMousePos, lastMousePos *mouse.Position) bool {
 	return false
 }
 
-func isMouseClicked(timeToCheck time.Duration) (clickComm, quit chan struct{}) {
-	ticker := time.NewTicker(time.Second * timeToCheck)
-	clickComm = make(chan struct{})
+func isMouseClicked(tracker *ActivityTracker) (clickComm, quit chan struct{}) {
+	ticker := time.NewTicker(time.Second * tracker.TimeToCheck)
+	clickComm = make(chan struct{}, 1)
 	quit = make(chan struct{})
 	registrationFree := make(chan struct{})
 	go func() {
@@ -68,15 +77,14 @@ func isMouseClicked(timeToCheck time.Duration) (clickComm, quit chan struct{}) {
 		for {
 			select {
 			case <-ticker.C:
-				fmt.Println("ticked mouse click at : ", time.Now())
-
+				//log.Printf("mouse clicker ticked at : %v\n", time.Now())
 				if !isRunning {
 					isRunning = true
 					go func(registrationFree chan struct{}) {
-						fmt.Printf("adding reg\n\n\n")
+						//log.Printf("adding reg \n")
 						mleft := robotgo.AddEvent("mleft")
 						if mleft {
-							fmt.Println("mleft clicked")
+							//log.Printf("mleft clicked \n")
 							clickComm <- struct{}{}
 							registrationFree <- struct{}{}
 							return
@@ -87,18 +95,18 @@ func isMouseClicked(timeToCheck time.Duration) (clickComm, quit chan struct{}) {
 				select {
 				case _, ok := <-registrationFree:
 					if ok {
-						fmt.Println("registration free")
+						//log.Printf("registration free for mouse click \n")
 						isRunning = false
 					} else {
-						fmt.Println("Channel closed!")
+						//log.Printf("Channel closed \n")
 					}
 				default:
-					fmt.Println("registration is busy")
+					//log.Printf("registration is busy for mouse click handler\n")
 					isRunning = true
 				}
 
 			case <-quit:
-				fmt.Println("stopped click handler")
+				log.Printf("stopping click handler")
 				close(clickComm)
 				return
 			}
