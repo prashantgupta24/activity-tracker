@@ -23,7 +23,7 @@ func (tracker *ActivityTracker) Start() (heartbeatCh chan *Heartbeat, quit chan 
 		for {
 			select {
 			case <-ticker.C:
-				log.Printf("tracker checking at %v\n", time.Now())
+				//log.Printf("tracker checking at %v\n", time.Now())
 				currentMousePos := mouse.GetPosition()
 				var heartbeat *Heartbeat
 				if isIdle && isPointerIdle(currentMousePos, lastMousePos) {
@@ -48,7 +48,6 @@ func (tracker *ActivityTracker) Start() (heartbeatCh chan *Heartbeat, quit chan 
 			case <-quit:
 				log.Printf("stopping activity tracker\n")
 				quitMouseClickHandler <- struct{}{}
-				//close(heartbeatCh)
 				//robotgo.StopEvent()
 				return
 			}

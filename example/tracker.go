@@ -10,8 +10,10 @@ import (
 func main() {
 	fmt.Println("starting activity tracker")
 
+	timeToCheck := 5
+
 	activityTracker := &activity.ActivityTracker{
-		TimeToCheck: 5,
+		TimeToCheck: time.Duration(timeToCheck),
 	}
 	heartbeatCh, quitActivityTracker := activityTracker.Start()
 
@@ -21,9 +23,9 @@ func main() {
 		select {
 		case heartbeat := <-heartbeatCh:
 			if !heartbeat.IsActivity {
-				fmt.Println("no activity detected")
+				fmt.Printf("no activity detected in the last %v seconds\n", int(timeToCheck))
 			} else {
-				fmt.Println("activity detected")
+				fmt.Printf("activity detected in the last %v seconds\n", int(timeToCheck))
 			}
 		case <-timeToKill.C:
 			fmt.Println("time to kill app")
