@@ -13,7 +13,7 @@ func main() {
 	activityTracker := &activity.ActivityTracker{
 		TimeToCheck: 5,
 	}
-	heartbeatCh, quitActivityTracker := activityTracker.StartTracker()
+	heartbeatCh, quitActivityTracker := activityTracker.Start()
 
 	timeToKill := time.NewTicker(time.Second * 30)
 

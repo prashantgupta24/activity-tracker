@@ -8,7 +8,7 @@ import (
 	"github.com/prashantgupta24/activity-tracker/src/mouse"
 )
 
-func (tracker *ActivityTracker) StartTracker() (heartbeatCh chan *Heartbeat, quit chan struct{}) {
+func (tracker *ActivityTracker) Start() (heartbeatCh chan *Heartbeat, quit chan struct{}) {
 
 	comm, quitMouseClickHandler := isMouseClicked(tracker)
 
