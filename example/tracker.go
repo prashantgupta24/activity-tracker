@@ -23,10 +23,14 @@ func main() {
 		select {
 		case heartbeat := <-heartbeatCh:
 			if !heartbeat.IsActivity {
-				fmt.Printf("no activity detected in the last %v seconds\n", int(timeToCheck))
+				fmt.Printf("no activity detected in the last %v seconds\n\n", int(timeToCheck))
 			} else {
 				fmt.Printf("activity detected in the last %v seconds. ", int(timeToCheck))
-				fmt.Printf("Activity type %#v\n", heartbeat.Activity)
+				fmt.Printf("Activity type:\n")
+				for activity, time := range heartbeat.Activity {
+					fmt.Printf("%v at %v\n", activity.ActivityType, time)
+				}
+				fmt.Println()
 			}
 		case <-timeToKill.C:
 			fmt.Println("time to kill app")

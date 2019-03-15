@@ -7,6 +7,7 @@ type ActivityType string
 const (
 	MOUSE_CURSOR_MOVEMENT ActivityType = "cursor-move"
 	MOUSE_LEFT_CLICK      ActivityType = "left-mouse-click"
+	SCREEN_CHANGE         ActivityType = "screen-change"
 )
 
 type Activity struct {
@@ -14,11 +15,14 @@ type Activity struct {
 }
 
 type ActivityTracker struct {
-	TimeToCheck time.Duration
+	TimeToCheck    time.Duration
+	activityCh     chan *Activity
+	workerTickerCh chan struct{}
+	services       []chan struct{}
 }
 
 type Heartbeat struct {
 	IsActivity bool
-	Activity   *Activity
+	Activity   map[*Activity]time.Time
 	Time       time.Time
 }

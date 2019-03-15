@@ -8,26 +8,41 @@ import (
 	"github.com/prashantgupta24/activity-tracker/src/mouse"
 )
 
+const (
+	timeBeforeHeartbeat = time.Millisecond * 10
+)
+
 func (tracker *ActivityTracker) Start() (heartbeatCh chan *Heartbeat, quit chan struct{}) {
 
-	comm, quitMouseClickHandler := isMouseClicked(tracker)
-
+	tracker.registerServices(handleMouseClicks, checkMouseCursorMovement)
+	//returned channels
 	heartbeatCh = make(chan *Heartbeat, 1)
 	quit = make(chan struct{})
 
 	go func(tracker *ActivityTracker, heartbeatCh chan *Heartbeat, quit chan struct{}) {
+
 		timeToCheck := tracker.TimeToCheck
-		ticker := time.NewTicker(time.Second * timeToCheck)
-		isClickIdle := true
-		var activity *Activity
-		lastMousePos := mouse.GetPosition()
+		//tickers
+		tickerHeartbeat := time.NewTicker(time.Second * timeToCheck)
+		tickerWorker := time.NewTicker(time.Second*timeToCheck - timeBeforeHeartbeat)
+
+		activities := makeActivityMap()
+
+		//pixel check
+		//screenSizeX, screenSizeY := robotgo.GetScreenSize()
+		//lastPixelColor := robotgo.GetPixelColor(int(screenSizeX/2), int(screenSizeY/2))
+
 		for {
 			select {
-			case <-ticker.C:
-				//log.Printf("tracker checking at %v\n", time.Now())
-				isPointerIdle, currentMousePos := isPointerIdle(lastMousePos)
+			case <-tickerWorker.C:
+				log.Printf("tracker worker working at %v\n", time.Now())
+				for i := 0; i < len(tracker.services); i++ {
+					tracker.workerTickerCh <- struct{}{}
+				}
+			case <-tickerHeartbeat.C:
+				log.Printf("tracker heartbeat checking at %v\n", time.Now())
 				var heartbeat *Heartbeat
-				if isClickIdle && isPointerIdle {
+				if len(activities) == 0 {
 					//log.Printf("no activity detected in the last %v seconds ...\n", int(timeToCheck))
 					heartbeat = &Heartbeat{
 						IsActivity: false,
@@ -36,26 +51,23 @@ func (tracker *ActivityTracker) Start() (heartbeatCh chan *Heartbeat, quit chan 
 					}
 				} else {
 					//log.Printf("activity detected in the last %v seconds ...\n", int(timeToCheck))
-					if isClickIdle {
-						activity = &Activity{
-							ActivityType: MOUSE_CURSOR_MOVEMENT,
-						}
-					}
 					heartbeat = &Heartbeat{
 						IsActivity: true,
-						Activity:   activity,
+						Activity:   activities,
 						Time:       time.Now(),
 					}
-					lastMousePos = currentMousePos
+
 				}
 				heartbeatCh <- heartbeat
-				isClickIdle = true
-			case activity = <-comm:
-				isClickIdle = false
-				//log.Printf("value received: %v\n", isClickIdle)
+				activities = makeActivityMap() //reset the activities map
+			case activity := <-tracker.activityCh:
+				activities[activity] = time.Now()
+				//log.Printf("activity received: %#v\n", activity)
 			case <-quit:
 				log.Printf("stopping activity tracker\n")
-				quitMouseClickHandler <- struct{}{}
+				for _, quitHandler := range tracker.services {
+					quitHandler <- struct{}{}
+				}
 				//robotgo.StopEvent()
 				return
 			}
@@ -65,44 +77,66 @@ func (tracker *ActivityTracker) Start() (heartbeatCh chan *Heartbeat, quit chan 
 	return heartbeatCh, quit
 }
 
-func isPointerIdle(lastMousePos *mouse.Position) (bool, *mouse.Position) {
-	//log.Printf("current mouse position: %v\n", currentMousePos)
-	//log.Printf("last mouse position: %v\n", lastMousePos)
-	currentMousePos := mouse.GetPosition()
-	if currentMousePos.MouseX == lastMousePos.MouseX &&
-		currentMousePos.MouseY == lastMousePos.MouseY {
-		return true, currentMousePos
-	}
-	return false, currentMousePos
-}
+func checkMouseCursorMovement(tickerCh chan struct{}, comm chan *Activity) (quit chan struct{}) {
 
-func isMouseClicked(tracker *ActivityTracker) (clickComm chan *Activity, quit chan struct{}) {
-	ticker := time.NewTicker(time.Second * tracker.TimeToCheck)
-	clickComm = make(chan *Activity, 1)
 	quit = make(chan struct{})
-	registrationFree := make(chan struct{})
-	go func() {
-		isRunning := false
+
+	go func(quit chan struct{}) {
+		lastMousePos := mouse.GetPosition()
 		for {
 			select {
-			case <-ticker.C:
-				//log.Printf("mouse clicker ticked at : %v\n", time.Now())
-				if !isRunning {
-					isRunning = true
-					go func(registrationFree chan struct{}) {
-						//log.Printf("adding reg \n")
-						mleft := robotgo.AddEvent("mleft")
-						if mleft {
-							//log.Printf("mleft clicked \n")
-							clickComm <- &Activity{
-								ActivityType: MOUSE_LEFT_CLICK,
-							}
-							registrationFree <- struct{}{}
-							return
-						}
-					}(registrationFree)
+			case <-tickerCh:
+				log.Printf("mouse cursor checked at : %v\n", time.Now())
+				//log.Printf("current mouse position: %v\n", currentMousePos)
+				//log.Printf("last mouse position: %v\n", lastMousePos)
+				currentMousePos := mouse.GetPosition()
+				if currentMousePos.MouseX == lastMousePos.MouseX &&
+					currentMousePos.MouseY == lastMousePos.MouseY {
+					continue
 				}
+				comm <- &Activity{
+					ActivityType: MOUSE_CURSOR_MOVEMENT,
+				}
+				lastMousePos = currentMousePos
+			case <-quit:
+				log.Printf("stopping cursor handler")
+				return
+			}
+		}
+	}(quit)
+	return quit
+}
 
+func addMouseClickRegistration(isRunning *bool, clickComm chan *Activity,
+	registrationFree chan struct{}) {
+	if !*isRunning {
+		*isRunning = true
+		go func(registrationFree chan struct{}) {
+			log.Printf("adding reg \n")
+			mleft := robotgo.AddEvent("mleft")
+			if mleft {
+				//log.Printf("mleft clicked \n")
+				clickComm <- &Activity{
+					ActivityType: MOUSE_LEFT_CLICK,
+				}
+				registrationFree <- struct{}{}
+				return
+			}
+		}(registrationFree)
+	}
+}
+func handleMouseClicks(tickerCh chan struct{}, clickComm chan *Activity) (quit chan struct{}) {
+	quit = make(chan struct{})
+	registrationFree := make(chan struct{})
+
+	go func(quit, registrationFree chan struct{}) {
+		isRunning := false
+		addMouseClickRegistration(&isRunning, clickComm, registrationFree) //run once before first check
+		for {
+			select {
+			case <-tickerCh:
+				log.Printf("mouse clicker checked at : %v\n", time.Now())
+				addMouseClickRegistration(&isRunning, clickComm, registrationFree)
 				select {
 				case _, ok := <-registrationFree:
 					if ok {
@@ -118,10 +152,26 @@ func isMouseClicked(tracker *ActivityTracker) (clickComm chan *Activity, quit ch
 
 			case <-quit:
 				log.Printf("stopping click handler")
-				close(clickComm)
 				return
 			}
 		}
-	}()
-	return clickComm, quit
+	}(quit, registrationFree)
+	return quit
+}
+
+func makeActivityMap() map[*Activity]time.Time {
+	activityMap := make(map[*Activity]time.Time)
+	return activityMap
+}
+
+func (tracker *ActivityTracker) registerServices(services ...func(tickerCh chan struct{},
+	clickComm chan *Activity) (quit chan struct{})) {
+
+	tracker.activityCh = make(chan *Activity, len(services))    // number based on types of activities being tracked
+	tracker.workerTickerCh = make(chan struct{}, len(services)) //this is for all the services, instead of each having their own
+
+	for _, service := range services {
+		quitCh := service(tracker.workerTickerCh, tracker.activityCh)
+		tracker.services = append(tracker.services, quitCh)
+	}
 }
