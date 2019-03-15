@@ -18,33 +18,41 @@ func (tracker *ActivityTracker) Start() (heartbeatCh chan *Heartbeat, quit chan 
 	go func(tracker *ActivityTracker, heartbeatCh chan *Heartbeat, quit chan struct{}) {
 		timeToCheck := tracker.TimeToCheck
 		ticker := time.NewTicker(time.Second * timeToCheck)
-		isIdle := true
+		isClickIdle := true
+		var activity *Activity
 		lastMousePos := mouse.GetPosition()
 		for {
 			select {
 			case <-ticker.C:
 				//log.Printf("tracker checking at %v\n", time.Now())
-				currentMousePos := mouse.GetPosition()
+				isPointerIdle, currentMousePos := isPointerIdle(lastMousePos)
 				var heartbeat *Heartbeat
-				if isIdle && isPointerIdle(currentMousePos, lastMousePos) {
+				if isClickIdle && isPointerIdle {
 					//log.Printf("no activity detected in the last %v seconds ...\n", int(timeToCheck))
 					heartbeat = &Heartbeat{
 						IsActivity: false,
+						Activity:   nil,
 						Time:       time.Now(),
 					}
 				} else {
 					//log.Printf("activity detected in the last %v seconds ...\n", int(timeToCheck))
+					if isClickIdle {
+						activity = &Activity{
+							ActivityType: MOUSE_CURSOR_MOVEMENT,
+						}
+					}
 					heartbeat = &Heartbeat{
 						IsActivity: true,
+						Activity:   activity,
 						Time:       time.Now(),
 					}
 					lastMousePos = currentMousePos
 				}
 				heartbeatCh <- heartbeat
-				isIdle = true
-			case <-comm:
-				isIdle = false
-				//log.Printf("value received: %v\n", isIdle)
+				isClickIdle = true
+			case activity = <-comm:
+				isClickIdle = false
+				//log.Printf("value received: %v\n", isClickIdle)
 			case <-quit:
 				log.Printf("stopping activity tracker\n")
 				quitMouseClickHandler <- struct{}{}
@@ -57,19 +65,20 @@ func (tracker *ActivityTracker) Start() (heartbeatCh chan *Heartbeat, quit chan 
 	return heartbeatCh, quit
 }
 
-func isPointerIdle(currentMousePos, lastMousePos *mouse.Position) bool {
+func isPointerIdle(lastMousePos *mouse.Position) (bool, *mouse.Position) {
 	//log.Printf("current mouse position: %v\n", currentMousePos)
 	//log.Printf("last mouse position: %v\n", lastMousePos)
+	currentMousePos := mouse.GetPosition()
 	if currentMousePos.MouseX == lastMousePos.MouseX &&
 		currentMousePos.MouseY == lastMousePos.MouseY {
-		return true
+		return true, currentMousePos
 	}
-	return false
+	return false, currentMousePos
 }
 
-func isMouseClicked(tracker *ActivityTracker) (clickComm, quit chan struct{}) {
+func isMouseClicked(tracker *ActivityTracker) (clickComm chan *Activity, quit chan struct{}) {
 	ticker := time.NewTicker(time.Second * tracker.TimeToCheck)
-	clickComm = make(chan struct{}, 1)
+	clickComm = make(chan *Activity, 1)
 	quit = make(chan struct{})
 	registrationFree := make(chan struct{})
 	go func() {
@@ -85,7 +94,9 @@ func isMouseClicked(tracker *ActivityTracker) (clickComm, quit chan struct{}) {
 						mleft := robotgo.AddEvent("mleft")
 						if mleft {
 							//log.Printf("mleft clicked \n")
-							clickComm <- struct{}{}
+							clickComm <- &Activity{
+								ActivityType: MOUSE_LEFT_CLICK,
+							}
 							registrationFree <- struct{}{}
 							return
 						}

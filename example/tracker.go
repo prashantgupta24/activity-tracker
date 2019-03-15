@@ -25,7 +25,8 @@ func main() {
 			if !heartbeat.IsActivity {
 				fmt.Printf("no activity detected in the last %v seconds\n", int(timeToCheck))
 			} else {
-				fmt.Printf("activity detected in the last %v seconds\n", int(timeToCheck))
+				fmt.Printf("activity detected in the last %v seconds. ", int(timeToCheck))
+				fmt.Printf("Activity type %#v\n", heartbeat.Activity)
 			}
 		case <-timeToKill.C:
 			fmt.Println("time to kill app")
