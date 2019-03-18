@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	timeBeforeHeartbeat = time.Millisecond * 10
+	preHeartbeatTime = time.Millisecond * 10
 )
 
 func (tracker *ActivityTracker) Start() (heartbeatCh chan *Heartbeat, quit chan struct{}) {
@@ -24,7 +24,7 @@ func (tracker *ActivityTracker) Start() (heartbeatCh chan *Heartbeat, quit chan 
 		timeToCheck := tracker.TimeToCheck
 		//tickers
 		tickerHeartbeat := time.NewTicker(time.Second * timeToCheck)
-		tickerWorker := time.NewTicker(time.Second*timeToCheck - timeBeforeHeartbeat)
+		tickerWorker := time.NewTicker(time.Second*timeToCheck - preHeartbeatTime)
 
 		activities := makeActivityMap()
 
@@ -107,47 +107,41 @@ func checkMouseCursorMovement(tickerCh chan struct{}, comm chan *Activity) (quit
 	return quit
 }
 
-func addMouseClickRegistration(isRunning *bool, clickComm chan *Activity,
-	registrationFree chan struct{}) {
-	if !*isRunning {
-		*isRunning = true
-		go func(registrationFree chan struct{}) {
-			log.Printf("adding reg \n")
-			mleft := robotgo.AddEvent("mleft")
-			if mleft {
-				//log.Printf("mleft clicked \n")
-				clickComm <- &Activity{
-					ActivityType: MOUSE_LEFT_CLICK,
-				}
-				registrationFree <- struct{}{}
-				return
-			}
-		}(registrationFree)
+func addMouseClickRegistration(clickComm chan *Activity, registrationFree chan struct{}) {
+	log.Printf("adding reg \n")
+	mleft := robotgo.AddEvent("mleft")
+	if mleft {
+		//log.Printf("mleft clicked \n")
+		clickComm <- &Activity{
+			ActivityType: MOUSE_LEFT_CLICK,
+		}
+		registrationFree <- struct{}{}
+		return
 	}
 }
+
 func handleMouseClicks(tickerCh chan struct{}, clickComm chan *Activity) (quit chan struct{}) {
 	quit = make(chan struct{})
 	registrationFree := make(chan struct{})
 
 	go func(quit, registrationFree chan struct{}) {
-		isRunning := false
-		addMouseClickRegistration(&isRunning, clickComm, registrationFree) //run once before first check
+		go addMouseClickRegistration(clickComm, registrationFree) //run once before first check
 		for {
 			select {
 			case <-tickerCh:
 				log.Printf("mouse clicker checked at : %v\n", time.Now())
-				addMouseClickRegistration(&isRunning, clickComm, registrationFree)
 				select {
 				case _, ok := <-registrationFree:
 					if ok {
 						//log.Printf("registration free for mouse click \n")
-						isRunning = false
+						//isRunning = false
+						go addMouseClickRegistration(clickComm, registrationFree)
 					} else {
-						//log.Printf("Channel closed \n")
+						//log.Printf("error : channel closed \n")
+						return
 					}
 				default:
 					//log.Printf("registration is busy for mouse click handler\n")
-					isRunning = true
 				}
 
 			case <-quit:
@@ -170,6 +164,9 @@ func (tracker *ActivityTracker) registerServices(services ...func(tickerCh chan 
 	tracker.activityCh = make(chan *Activity, len(services))    // number based on types of activities being tracked
 	tracker.workerTickerCh = make(chan struct{}, len(services)) //this is for all the services, instead of each having their own
 
+	//NO NEED FOR THIS, WE CAN JUST TRY TO RANGE OVER WORKER TICKERCH
+	//OR INDIVIDUAL CHANNEL FOR EACH SERVICE
+	//ALSO, WHETHER NEED TO PASS VARIABLES TO GO ROUTINES
 	for _, service := range services {
 		quitCh := service(tracker.workerTickerCh, tracker.activityCh)
 		tracker.services = append(tracker.services, quitCh)
