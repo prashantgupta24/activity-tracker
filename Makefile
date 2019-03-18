@@ -1,2 +1,2 @@
 example-start:
-	go run example/tracker.go
+	go run example/example.go

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/prashantgupta24/activity-tracker/src/activity"
+	"github.com/prashantgupta24/activity-tracker/pkg/tracker"
 )
 
 func main() {
@@ -12,7 +12,7 @@ func main() {
 
 	timeToCheck := 5
 
-	activityTracker := &activity.ActivityTracker{
+	activityTracker := &tracker.Instance{
 		TimeToCheck: time.Duration(timeToCheck),
 	}
 	heartbeatCh, quitActivityTracker := activityTracker.Start()
