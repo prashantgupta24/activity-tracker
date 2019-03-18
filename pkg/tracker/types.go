@@ -7,10 +7,9 @@ import (
 )
 
 type Instance struct {
-	TimeToCheck    time.Duration
-	activityCh     chan *activity.Type
-	workerTickerCh chan struct{}
-	services       []chan struct{}
+	TimeToCheck     time.Duration
+	activityCh      chan *activity.Type
+	serviceHandlers []chan struct{}
 }
 
 type Heartbeat struct {

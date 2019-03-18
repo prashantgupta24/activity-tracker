@@ -8,37 +8,32 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
-func MouseClickHandler(tickerCh chan struct{}, clickComm chan *activity.Type) (quit chan struct{}) {
-	quit = make(chan struct{})
+func MouseClickHandler(clickComm chan *activity.Type) (tickerCh chan struct{}) {
+	tickerCh = make(chan struct{})
 	registrationFree := make(chan struct{})
 
-	go func(quit, registrationFree chan struct{}) {
+	go func() {
 		go addMouseClickRegistration(clickComm, registrationFree) //run once before first check
-		for {
+		for range tickerCh {
+			log.Printf("mouse clicker checked at : %v\n", time.Now())
 			select {
-			case <-tickerCh:
-				log.Printf("mouse clicker checked at : %v\n", time.Now())
-				select {
-				case _, ok := <-registrationFree:
-					if ok {
-						//log.Printf("registration free for mouse click \n")
-						go addMouseClickRegistration(clickComm, registrationFree)
-					} else {
-						//log.Printf("error : channel closed \n")
-						return
-					}
-				default:
-					//nothing needs to be done
-					//log.Printf("registration is busy for mouse click handler\n")
+			case _, ok := <-registrationFree:
+				if ok {
+					//log.Printf("registration free for mouse click \n")
+					go addMouseClickRegistration(clickComm, registrationFree)
+				} else {
+					//log.Printf("error : channel closed \n")
+					return
 				}
-
-			case <-quit:
-				log.Printf("stopping click handler")
-				return
+			default:
+				//log.Printf("registration is busy for mouse click handler, do nothing\n")
 			}
 		}
-	}(quit, registrationFree)
-	return quit
+		log.Printf("stopping click handler")
+		return
+	}()
+
+	return tickerCh
 }
 
 func addMouseClickRegistration(clickComm chan *activity.Type, registrationFree chan struct{}) {

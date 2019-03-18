@@ -8,32 +8,29 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
-func MouseCursorHandler(tickerCh chan struct{}, comm chan *activity.Type) (quit chan struct{}) {
+func MouseCursorHandler(comm chan *activity.Type) (tickerCh chan struct{}) {
 
-	quit = make(chan struct{})
+	tickerCh = make(chan struct{})
 
-	go func(quit chan struct{}) {
+	go func() {
 		lastMousePos := mouse.GetPosition()
-		for {
-			select {
-			case <-tickerCh:
-				log.Printf("mouse cursor checked at : %v\n", time.Now())
-				//log.Printf("current mouse position: %v\n", currentMousePos)
-				//log.Printf("last mouse position: %v\n", lastMousePos)
-				currentMousePos := mouse.GetPosition()
-				if currentMousePos.MouseX == lastMousePos.MouseX &&
-					currentMousePos.MouseY == lastMousePos.MouseY {
-					continue
-				}
-				comm <- &activity.Type{
-					ActivityType: activity.MOUSE_CURSOR_MOVEMENT,
-				}
-				lastMousePos = currentMousePos
-			case <-quit:
-				log.Printf("stopping cursor handler")
-				return
+		for range tickerCh {
+			log.Printf("mouse cursor checked at : %v\n", time.Now())
+			//log.Printf("current mouse position: %v\n", currentMousePos)
+			//log.Printf("last mouse position: %v\n", lastMousePos)
+			currentMousePos := mouse.GetPosition()
+			if currentMousePos.MouseX == lastMousePos.MouseX &&
+				currentMousePos.MouseY == lastMousePos.MouseY {
+				continue
 			}
+			comm <- &activity.Type{
+				ActivityType: activity.MOUSE_CURSOR_MOVEMENT,
+			}
+			lastMousePos = currentMousePos
 		}
-	}(quit)
-	return quit
+		log.Printf("stopping cursor handler")
+		return
+	}()
+
+	return tickerCh
 }

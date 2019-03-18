@@ -21,8 +21,7 @@ func (tracker *Instance) Start() (heartbeatCh chan *Heartbeat, quit chan struct{
 	heartbeatCh = make(chan *Heartbeat, 1)
 	quit = make(chan struct{})
 
-	go func(tracker *Instance, heartbeatCh chan *Heartbeat, quit chan struct{}) {
-
+	go func(tracker *Instance) {
 		timeToCheck := tracker.TimeToCheck
 		//tickers
 		tickerHeartbeat := time.NewTicker(time.Second * timeToCheck)
@@ -34,8 +33,9 @@ func (tracker *Instance) Start() (heartbeatCh chan *Heartbeat, quit chan struct{
 			select {
 			case <-tickerWorker.C:
 				log.Printf("tracker worker working at %v\n", time.Now())
-				for i := 0; i < len(tracker.services); i++ {
-					tracker.workerTickerCh <- struct{}{}
+				//time to ping all registered service handlers
+				for _, serviceHandler := range tracker.serviceHandlers {
+					serviceHandler <- struct{}{}
 				}
 			case <-tickerHeartbeat.C:
 				log.Printf("tracker heartbeat checking at %v\n", time.Now())
@@ -63,14 +63,14 @@ func (tracker *Instance) Start() (heartbeatCh chan *Heartbeat, quit chan struct{
 				//log.Printf("activity received: %#v\n", activity)
 			case <-quit:
 				log.Printf("stopping activity tracker\n")
-				for _, quitHandler := range tracker.services {
-					quitHandler <- struct{}{}
+				//close all service handlers for a clean exit
+				for _, serviceHandler := range tracker.serviceHandlers {
+					close(serviceHandler)
 				}
-				//robotgo.StopEvent()
 				return
 			}
 		}
-	}(tracker, heartbeatCh, quit)
+	}(tracker)
 
 	return heartbeatCh, quit
 }
@@ -80,14 +80,14 @@ func makeActivityMap() map[*activity.Type]time.Time {
 	return activityMap
 }
 
-func (tracker *Instance) registerHandlers(services ...func(tickerCh chan struct{},
-	clickComm chan *activity.Type) (quit chan struct{})) {
+func (tracker *Instance) registerHandlers(services ...func(clickComm chan *activity.Type) (tickerCh chan struct{})) {
 
-	tracker.activityCh = make(chan *activity.Type, len(services)) // number based on types of activities being tracked
-	tracker.workerTickerCh = make(chan struct{}, len(services))   //this is for all the services, instead of each having their own
+	if len(tracker.serviceHandlers) == 0 { //checking for multiple registration attempts
+		tracker.activityCh = make(chan *activity.Type, len(services)) // number based on types of activities being tracked
 
-	for _, service := range services {
-		quitCh := service(tracker.workerTickerCh, tracker.activityCh)
-		tracker.services = append(tracker.services, quitCh)
+		for _, service := range services {
+			tickerCh := service(tracker.activityCh)
+			tracker.serviceHandlers = append(tracker.serviceHandlers, tickerCh)
+		}
 	}
 }
