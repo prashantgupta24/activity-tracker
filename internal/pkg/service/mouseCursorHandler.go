@@ -16,9 +16,9 @@ func MouseCursorHandler(comm chan *activity.Type) (tickerCh chan struct{}) {
 		lastMousePos := mouse.GetPosition()
 		for range tickerCh {
 			log.Printf("mouse cursor checked at : %v\n", time.Now())
+			currentMousePos := mouse.GetPosition()
 			//log.Printf("current mouse position: %v\n", currentMousePos)
 			//log.Printf("last mouse position: %v\n", lastMousePos)
-			currentMousePos := mouse.GetPosition()
 			if currentMousePos.MouseX == lastMousePos.MouseX &&
 				currentMousePos.MouseY == lastMousePos.MouseY {
 				continue

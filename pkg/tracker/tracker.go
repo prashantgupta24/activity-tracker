@@ -9,13 +9,14 @@ import (
 )
 
 const (
-	preHeartbeatTime = time.Millisecond * 10
+	preHeartbeatTime = time.Millisecond * 100
 )
 
 func (tracker *Instance) Start() (heartbeatCh chan *Heartbeat, quit chan struct{}) {
 
 	//register service handlers
-	tracker.registerHandlers(service.MouseClickHandler, service.MouseCursorHandler)
+	tracker.registerHandlers(service.MouseClickHandler, service.MouseCursorHandler,
+		service.ScreenChangeHandler)
 
 	//returned channels
 	heartbeatCh = make(chan *Heartbeat, 1)
