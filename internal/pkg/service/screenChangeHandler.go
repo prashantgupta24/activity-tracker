@@ -8,7 +8,7 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
-type ScreenChangeHandler struct {
+type screenChangeHandler struct {
 	tickerCh chan struct{}
 }
 
@@ -17,7 +17,7 @@ type screenInfo struct {
 	currentPixelColor string
 }
 
-func (s *ScreenChangeHandler) Start(activityCh chan *activity.Type) {
+func (s *screenChangeHandler) Start(activityCh chan *activity.Type) {
 
 	s.tickerCh = make(chan struct{})
 
@@ -48,7 +48,11 @@ func (s *ScreenChangeHandler) Start(activityCh chan *activity.Type) {
 	}()
 }
 
-func (s *ScreenChangeHandler) Trigger() {
+func ScreenChangeHandler() *screenChangeHandler {
+	return &screenChangeHandler{}
+}
+
+func (s *screenChangeHandler) Trigger() {
 	//doing it the non-blocking sender way
 	select {
 	case s.tickerCh <- struct{}{}:
@@ -56,7 +60,7 @@ func (s *ScreenChangeHandler) Trigger() {
 		//service is blocked, handle it somehow?
 	}
 }
-func (s *ScreenChangeHandler) Close() {
+func (s *screenChangeHandler) Close() {
 	close(s.tickerCh)
 }
 

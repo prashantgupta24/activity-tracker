@@ -8,7 +8,7 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
-type MouseCursorHandler struct {
+type mouseCursorHandler struct {
 	tickerCh chan struct{}
 }
 
@@ -17,7 +17,7 @@ type cursorInfo struct {
 	currentMousePos *mouse.Position
 }
 
-func (m *MouseCursorHandler) Start(activityCh chan *activity.Type) {
+func (m *mouseCursorHandler) Start(activityCh chan *activity.Type) {
 
 	m.tickerCh = make(chan struct{})
 
@@ -45,7 +45,11 @@ func (m *MouseCursorHandler) Start(activityCh chan *activity.Type) {
 	}()
 }
 
-func (m *MouseCursorHandler) Trigger() {
+func MouseCursorHandler() *mouseCursorHandler {
+	return &mouseCursorHandler{}
+}
+
+func (m *mouseCursorHandler) Trigger() {
 	//doing it the non-blocking sender way
 	select {
 	case m.tickerCh <- struct{}{}:
@@ -53,7 +57,7 @@ func (m *MouseCursorHandler) Trigger() {
 		//service is blocked, handle it somehow?
 	}
 }
-func (m *MouseCursorHandler) Close() {
+func (m *mouseCursorHandler) Close() {
 	close(m.tickerCh)
 }
 

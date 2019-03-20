@@ -12,18 +12,16 @@ const (
 	preHeartbeatTime = time.Millisecond * 100
 )
 
-func (tracker *Instance) Start() (heartbeatCh chan *Heartbeat, quit chan struct{}) {
-
+func (tracker *Instance) StartWithServices(services ...service.Instance) (heartbeatCh chan *Heartbeat) {
 	//register service handlers
-	tracker.registerHandlers(&service.MouseClickHandler{}, &service.MouseCursorHandler{},
-		&service.ScreenChangeHandler{})
+	tracker.registerHandlers(services...)
 
 	//returned channels
 	heartbeatCh = make(chan *Heartbeat, 1)
-	quit = make(chan struct{})
+	tracker.quit = make(chan struct{})
 
 	go func(tracker *Instance) {
-		timeToCheck := tracker.TimeToCheck
+		timeToCheck := time.Duration(tracker.Frequency)
 		//tickers
 		tickerHeartbeat := time.NewTicker(time.Second * timeToCheck)
 		tickerWorker := time.NewTicker(time.Second*timeToCheck - preHeartbeatTime)
@@ -62,7 +60,7 @@ func (tracker *Instance) Start() (heartbeatCh chan *Heartbeat, quit chan struct{
 			case activity := <-tracker.activityCh:
 				activities[activity] = time.Now()
 				//log.Printf("activity received: %#v\n", activity)
-			case <-quit:
+			case <-tracker.quit:
 				log.Printf("stopping activity tracker\n")
 				//close all services for a clean exit
 				for service := range tracker.services {
@@ -73,7 +71,16 @@ func (tracker *Instance) Start() (heartbeatCh chan *Heartbeat, quit chan struct{
 		}
 	}(tracker)
 
-	return heartbeatCh, quit
+	return heartbeatCh
+}
+
+func (tracker *Instance) Quit() {
+	tracker.quit <- struct{}{}
+}
+
+func (tracker *Instance) Start() (heartbeatCh chan *Heartbeat) {
+	return tracker.StartWithServices(service.MouseClickHandler(), service.MouseCursorHandler(),
+		service.ScreenChangeHandler())
 }
 
 func makeActivityMap() map[*activity.Type]time.Time {
