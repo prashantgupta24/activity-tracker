@@ -8,6 +8,11 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
+type screenInfo struct {
+	didScreenChange   bool
+	currentPixelColor string
+}
+
 func ScreenChangeHandler(activityCh chan *activity.Type) (tickerCh chan struct{}) {
 
 	tickerCh = make(chan struct{})
@@ -19,14 +24,19 @@ func ScreenChangeHandler(activityCh chan *activity.Type) (tickerCh chan struct{}
 		lastPixelColor := robotgo.GetPixelColor(pixelPointX, pixelPointY)
 		for range tickerCh {
 			log.Printf("screen change checked at : %v\n", time.Now())
-			currentPixelColor := robotgo.GetPixelColor(pixelPointX, pixelPointY)
-			// log.Printf("current pixel color: %v\n", currentPixelColor)
-			// log.Printf("last pixel color: %v\n", lastPixelColor)
-			if lastPixelColor != currentPixelColor {
-				activityCh <- &activity.Type{
-					ActivityType: activity.SCREEN_CHANGE,
+			commCh := make(chan *screenInfo)
+			go checkScreenChange(commCh, lastPixelColor, pixelPointX, pixelPointY)
+			select {
+			case screenInfo := <-commCh:
+				if screenInfo.didScreenChange {
+					activityCh <- &activity.Type{
+						ActivityType: activity.SCREEN_CHANGE,
+					}
+					lastPixelColor = screenInfo.currentPixelColor
 				}
-				lastPixelColor = currentPixelColor
+			case <-time.After(timeout * time.Millisecond):
+				//timeout, do nothing
+				log.Printf("timeout happened after %vms while checking screen change handler", timeout)
 			}
 		}
 		log.Printf("stopping screen change handler")
@@ -34,4 +44,21 @@ func ScreenChangeHandler(activityCh chan *activity.Type) (tickerCh chan struct{}
 	}()
 
 	return tickerCh
+}
+
+func checkScreenChange(commCh chan *screenInfo, lastPixelColor string, pixelPointX, pixelPointY int) {
+	currentPixelColor := robotgo.GetPixelColor(pixelPointX, pixelPointY)
+	// log.Printf("current pixel color: %v\n", currentPixelColor)
+	// log.Printf("last pixel color: %v\n", lastPixelColor)
+	if lastPixelColor != currentPixelColor {
+		commCh <- &screenInfo{
+			didScreenChange:   true,
+			currentPixelColor: currentPixelColor,
+		}
+	} else { //comment this section out to test timeout logic
+		commCh <- &screenInfo{
+			didScreenChange:   false,
+			currentPixelColor: "",
+		}
+	}
 }
