@@ -1,6 +1,8 @@
 package mouse
 
-import "github.com/go-vgo/robotgo"
+import (
+	"github.com/go-vgo/robotgo"
+)
 
 type Position struct {
 	MouseX int
