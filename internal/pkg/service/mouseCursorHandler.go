@@ -8,12 +8,14 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
+type MouseCursorHandler struct{}
+
 type cursorInfo struct {
 	didCursorMove   bool
 	currentMousePos *mouse.Position
 }
 
-func MouseCursorHandler(activityCh chan *activity.Type) (tickerCh chan struct{}) {
+func (m *MouseCursorHandler) Start(activityCh chan *activity.Type) (tickerCh chan struct{}) {
 
 	tickerCh = make(chan struct{})
 

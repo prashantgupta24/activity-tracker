@@ -8,7 +8,9 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
-func MouseClickHandler(activityCh chan *activity.Type) (tickerCh chan struct{}) {
+type MouseClickHandler struct{}
+
+func (m *MouseClickHandler) Start(activityCh chan *activity.Type) (tickerCh chan struct{}) {
 	tickerCh = make(chan struct{})
 	registrationFree := make(chan struct{})
 

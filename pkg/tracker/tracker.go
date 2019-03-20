@@ -15,8 +15,8 @@ const (
 func (tracker *Instance) Start() (heartbeatCh chan *Heartbeat, quit chan struct{}) {
 
 	//register service handlers
-	tracker.registerHandlers(service.MouseClickHandler, service.MouseCursorHandler,
-		service.ScreenChangeHandler)
+	tracker.registerHandlers(&service.MouseClickHandler{}, &service.MouseCursorHandler{},
+		&service.ScreenChangeHandler{})
 
 	//returned channels
 	heartbeatCh = make(chan *Heartbeat, 1)
@@ -86,13 +86,13 @@ func makeActivityMap() map[*activity.Type]time.Time {
 	return activityMap
 }
 
-func (tracker *Instance) registerHandlers(services ...func(clickComm chan *activity.Type) (tickerCh chan struct{})) {
+func (tracker *Instance) registerHandlers(services ...service.Instance) {
 
 	if len(tracker.serviceHandlers) == 0 { //checking for multiple registration attempts
 		tracker.activityCh = make(chan *activity.Type, len(services)) // number based on types of activities being tracked
 
 		for _, service := range services {
-			tickerCh := service(tracker.activityCh)
+			tickerCh := service.Start(tracker.activityCh)
 			tracker.serviceHandlers = append(tracker.serviceHandlers, tickerCh)
 		}
 	}

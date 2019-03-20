@@ -8,12 +8,14 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
+type ScreenChangeHandler struct{}
+
 type screenInfo struct {
 	didScreenChange   bool
 	currentPixelColor string
 }
 
-func ScreenChangeHandler(activityCh chan *activity.Type) (tickerCh chan struct{}) {
+func (s *ScreenChangeHandler) Start(activityCh chan *activity.Type) (tickerCh chan struct{}) {
 
 	tickerCh = make(chan struct{})
 
