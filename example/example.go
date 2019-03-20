@@ -10,12 +10,17 @@ import (
 func main() {
 	fmt.Println("starting activity tracker")
 
-	timeToCheck := 5
+	frequency := 5 //value always in seconds
 
 	activityTracker := &tracker.Instance{
-		TimeToCheck: time.Duration(timeToCheck),
+		Frequency: frequency,
 	}
-	heartbeatCh, quitActivityTracker := activityTracker.Start()
+
+	//This starts the tracker for all services
+	heartbeatCh := activityTracker.Start()
+
+	//if you only want to track certain services, you can use StartWithServices
+	//heartbeatCh := activityTracker.StartWithServices(service.MouseClickHandler(), service.MouseCursorHandler())
 
 	timeToKill := time.NewTicker(time.Second * 30)
 
@@ -23,18 +28,18 @@ func main() {
 		select {
 		case heartbeat := <-heartbeatCh:
 			if !heartbeat.IsActivity {
-				fmt.Printf("no activity detected in the last %v seconds\n\n", int(timeToCheck))
+				fmt.Printf("no activity detected in the last %v seconds\n\n", int(frequency))
 			} else {
-				fmt.Printf("activity detected in the last %v seconds. ", int(timeToCheck))
+				fmt.Printf("activity detected in the last %v seconds. ", int(frequency))
 				fmt.Printf("Activity type:\n")
 				for activity, time := range heartbeat.Activity {
-					fmt.Printf("%v at %v\n", activity.ActivityType, time)
+					fmt.Printf("%v ---> %v\n", activity.ActivityType, time)
 				}
 				fmt.Println()
 			}
 		case <-timeToKill.C:
 			fmt.Println("time to kill app")
-			quitActivityTracker <- struct{}{}
+			activityTracker.Quit()
 			return
 		}
 	}

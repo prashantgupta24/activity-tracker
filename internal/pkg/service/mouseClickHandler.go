@@ -8,11 +8,11 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
-type MouseClickHandler struct {
+type mouseClickHandler struct {
 	tickerCh chan struct{}
 }
 
-func (m *MouseClickHandler) Start(activityCh chan *activity.Type) {
+func (m *mouseClickHandler) Start(activityCh chan *activity.Type) {
 	m.tickerCh = make(chan struct{})
 	registrationFree := make(chan struct{})
 
@@ -38,7 +38,11 @@ func (m *MouseClickHandler) Start(activityCh chan *activity.Type) {
 	}()
 }
 
-func (m *MouseClickHandler) Trigger() {
+func MouseClickHandler() *mouseClickHandler {
+	return &mouseClickHandler{}
+}
+
+func (m *mouseClickHandler) Trigger() {
 	//doing it the non-blocking sender way
 	select {
 	case m.tickerCh <- struct{}{}:
@@ -46,7 +50,7 @@ func (m *MouseClickHandler) Trigger() {
 		//service is blocked, handle it somehow?
 	}
 }
-func (m *MouseClickHandler) Close() {
+func (m *mouseClickHandler) Close() {
 	close(m.tickerCh)
 }
 

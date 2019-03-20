@@ -8,9 +8,10 @@ import (
 )
 
 type Instance struct {
-	TimeToCheck time.Duration
-	activityCh  chan *activity.Type
-	services    map[service.Instance]bool
+	Frequency  int
+	activityCh chan *activity.Type
+	quit       chan struct{}
+	services   map[service.Instance]bool
 }
 
 type Heartbeat struct {
