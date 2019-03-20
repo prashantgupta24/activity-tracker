@@ -8,23 +8,25 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
-type ScreenChangeHandler struct{}
+type ScreenChangeHandler struct {
+	tickerCh chan struct{}
+}
 
 type screenInfo struct {
 	didScreenChange   bool
 	currentPixelColor string
 }
 
-func (s *ScreenChangeHandler) Start(activityCh chan *activity.Type) (tickerCh chan struct{}) {
+func (s *ScreenChangeHandler) Start(activityCh chan *activity.Type) {
 
-	tickerCh = make(chan struct{})
+	s.tickerCh = make(chan struct{})
 
 	go func() {
 		screenSizeX, screenSizeY := robotgo.GetScreenSize()
 		pixelPointX := int(screenSizeX / 2)
 		pixelPointY := int(screenSizeY / 2)
 		lastPixelColor := robotgo.GetPixelColor(pixelPointX, pixelPointY)
-		for range tickerCh {
+		for range s.tickerCh {
 			log.Printf("screen change checked at : %v\n", time.Now())
 			commCh := make(chan *screenInfo)
 			go checkScreenChange(commCh, lastPixelColor, pixelPointX, pixelPointY)
@@ -44,14 +46,25 @@ func (s *ScreenChangeHandler) Start(activityCh chan *activity.Type) (tickerCh ch
 		log.Printf("stopping screen change handler")
 		return
 	}()
+}
 
-	return tickerCh
+func (s *ScreenChangeHandler) Trigger() {
+	//doing it the non-blocking sender way
+	select {
+	case s.tickerCh <- struct{}{}:
+	default:
+		//service is blocked, handle it somehow?
+	}
+}
+func (s *ScreenChangeHandler) Close() {
+	close(s.tickerCh)
 }
 
 func checkScreenChange(commCh chan *screenInfo, lastPixelColor string, pixelPointX, pixelPointY int) {
 	currentPixelColor := robotgo.GetPixelColor(pixelPointX, pixelPointY)
 	// log.Printf("current pixel color: %v\n", currentPixelColor)
 	// log.Printf("last pixel color: %v\n", lastPixelColor)
+	//robotgo.MoveMouse(pixelPointX, pixelPointY)
 	if lastPixelColor != currentPixelColor {
 		commCh <- &screenInfo{
 			didScreenChange:   true,

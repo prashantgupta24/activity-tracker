@@ -8,20 +8,22 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
-type MouseCursorHandler struct{}
+type MouseCursorHandler struct {
+	tickerCh chan struct{}
+}
 
 type cursorInfo struct {
 	didCursorMove   bool
 	currentMousePos *mouse.Position
 }
 
-func (m *MouseCursorHandler) Start(activityCh chan *activity.Type) (tickerCh chan struct{}) {
+func (m *MouseCursorHandler) Start(activityCh chan *activity.Type) {
 
-	tickerCh = make(chan struct{})
+	m.tickerCh = make(chan struct{})
 
 	go func() {
 		lastMousePos := mouse.GetPosition()
-		for range tickerCh {
+		for range m.tickerCh {
 			log.Printf("mouse cursor checked at : %v\n", time.Now())
 			commCh := make(chan *cursorInfo)
 			go checkCursorChange(commCh, lastMousePos)
@@ -41,8 +43,18 @@ func (m *MouseCursorHandler) Start(activityCh chan *activity.Type) (tickerCh cha
 		log.Printf("stopping cursor handler")
 		return
 	}()
+}
 
-	return tickerCh
+func (m *MouseCursorHandler) Trigger() {
+	//doing it the non-blocking sender way
+	select {
+	case m.tickerCh <- struct{}{}:
+	default:
+		//service is blocked, handle it somehow?
+	}
+}
+func (m *MouseCursorHandler) Close() {
+	close(m.tickerCh)
 }
 
 func checkCursorChange(commCh chan *cursorInfo, lastMousePos *mouse.Position) {

@@ -8,15 +8,17 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
-type MouseClickHandler struct{}
+type MouseClickHandler struct {
+	tickerCh chan struct{}
+}
 
-func (m *MouseClickHandler) Start(activityCh chan *activity.Type) (tickerCh chan struct{}) {
-	tickerCh = make(chan struct{})
+func (m *MouseClickHandler) Start(activityCh chan *activity.Type) {
+	m.tickerCh = make(chan struct{})
 	registrationFree := make(chan struct{})
 
 	go func() {
 		go addMouseClickRegistration(activityCh, registrationFree) //run once before first check
-		for range tickerCh {
+		for range m.tickerCh {
 			log.Printf("mouse clicker checked at : %v\n", time.Now())
 			select {
 			case _, ok := <-registrationFree:
@@ -34,8 +36,18 @@ func (m *MouseClickHandler) Start(activityCh chan *activity.Type) (tickerCh chan
 		log.Printf("stopping click handler")
 		return
 	}()
+}
 
-	return tickerCh
+func (m *MouseClickHandler) Trigger() {
+	//doing it the non-blocking sender way
+	select {
+	case m.tickerCh <- struct{}{}:
+	default:
+		//service is blocked, handle it somehow?
+	}
+}
+func (m *MouseClickHandler) Close() {
+	close(m.tickerCh)
 }
 
 func addMouseClickRegistration(activityCh chan *activity.Type, registrationFree chan struct{}) {

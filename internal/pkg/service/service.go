@@ -7,5 +7,7 @@ const (
 )
 
 type Instance interface {
-	Start(chan *activity.Type) chan struct{}
+	Start(chan *activity.Type)
+	Trigger()
+	Close()
 }

@@ -34,14 +34,9 @@ func (tracker *Instance) Start() (heartbeatCh chan *Heartbeat, quit chan struct{
 			select {
 			case <-tickerWorker.C:
 				log.Printf("tracker worker working at %v\n", time.Now())
-				//time to ping all registered service handlers
-				//doing it the non-blocking sender way
-				for _, serviceHandler := range tracker.serviceHandlers {
-					select {
-					case serviceHandler <- struct{}{}:
-					default:
-						//service is blocked
-					}
+				//time to trigger all registered services
+				for service := range tracker.services {
+					service.Trigger()
 				}
 			case <-tickerHeartbeat.C:
 				log.Printf("tracker heartbeat checking at %v\n", time.Now())
@@ -69,9 +64,9 @@ func (tracker *Instance) Start() (heartbeatCh chan *Heartbeat, quit chan struct{
 				//log.Printf("activity received: %#v\n", activity)
 			case <-quit:
 				log.Printf("stopping activity tracker\n")
-				//close all service handlers for a clean exit
-				for _, serviceHandler := range tracker.serviceHandlers {
-					close(serviceHandler)
+				//close all services for a clean exit
+				for service := range tracker.services {
+					service.Close()
 				}
 				return
 			}
@@ -88,12 +83,14 @@ func makeActivityMap() map[*activity.Type]time.Time {
 
 func (tracker *Instance) registerHandlers(services ...service.Instance) {
 
-	if len(tracker.serviceHandlers) == 0 { //checking for multiple registration attempts
-		tracker.activityCh = make(chan *activity.Type, len(services)) // number based on types of activities being tracked
+	tracker.services = make(map[service.Instance]bool)
+	tracker.activityCh = make(chan *activity.Type, len(services)) // number based on types of activities being tracked
 
-		for _, service := range services {
-			tickerCh := service.Start(tracker.activityCh)
-			tracker.serviceHandlers = append(tracker.serviceHandlers, tickerCh)
+	for _, service := range services {
+		service.Start(tracker.activityCh)
+		if _, ok := tracker.services[service]; !ok { //duplicate registration prevention
+			tracker.services[service] = true
 		}
+
 	}
 }
