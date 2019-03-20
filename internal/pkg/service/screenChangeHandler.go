@@ -8,7 +8,7 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
-func ScreenChangeHandler(comm chan *activity.Type) (tickerCh chan struct{}) {
+func ScreenChangeHandler(activityCh chan *activity.Type) (tickerCh chan struct{}) {
 
 	tickerCh = make(chan struct{})
 
@@ -23,7 +23,7 @@ func ScreenChangeHandler(comm chan *activity.Type) (tickerCh chan struct{}) {
 			// log.Printf("current pixel color: %v\n", currentPixelColor)
 			// log.Printf("last pixel color: %v\n", lastPixelColor)
 			if lastPixelColor != currentPixelColor {
-				comm <- &activity.Type{
+				activityCh <- &activity.Type{
 					ActivityType: activity.SCREEN_CHANGE,
 				}
 				lastPixelColor = currentPixelColor

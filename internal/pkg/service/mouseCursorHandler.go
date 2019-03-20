@@ -8,7 +8,7 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
-func MouseCursorHandler(comm chan *activity.Type) (tickerCh chan struct{}) {
+func MouseCursorHandler(activityCh chan *activity.Type) (tickerCh chan struct{}) {
 
 	tickerCh = make(chan struct{})
 
@@ -23,7 +23,7 @@ func MouseCursorHandler(comm chan *activity.Type) (tickerCh chan struct{}) {
 				currentMousePos.MouseY == lastMousePos.MouseY {
 				continue
 			}
-			comm <- &activity.Type{
+			activityCh <- &activity.Type{
 				ActivityType: activity.MOUSE_CURSOR_MOVEMENT,
 			}
 			lastMousePos = currentMousePos

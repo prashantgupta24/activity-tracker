@@ -35,8 +35,13 @@ func (tracker *Instance) Start() (heartbeatCh chan *Heartbeat, quit chan struct{
 			case <-tickerWorker.C:
 				log.Printf("tracker worker working at %v\n", time.Now())
 				//time to ping all registered service handlers
+				//doing it the non-blocking sender way
 				for _, serviceHandler := range tracker.serviceHandlers {
-					serviceHandler <- struct{}{}
+					select {
+					case serviceHandler <- struct{}{}:
+					default:
+						//service is blocked
+					}
 				}
 			case <-tickerHeartbeat.C:
 				log.Printf("tracker heartbeat checking at %v\n", time.Now())
