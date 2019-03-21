@@ -1,8 +1,9 @@
 package service
 
 import (
-	"log"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/prashantgupta24/activity-tracker/internal/pkg/mouse"
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
@@ -17,16 +18,16 @@ type cursorInfo struct {
 	currentMousePos *mouse.Position
 }
 
-func (m *mouseCursorHandler) Start(activityCh chan *activity.Type) {
+func (m *mouseCursorHandler) Start(logger *log.Logger, activityCh chan *activity.Type) {
 
 	m.tickerCh = make(chan struct{})
 
 	go func() {
 		lastMousePos := mouse.GetPosition()
 		for range m.tickerCh {
-			log.Printf("mouse cursor checked at : %v\n", time.Now())
+			logger.Debugf("mouse cursor checked at : %v\n", time.Now())
 			commCh := make(chan *cursorInfo)
-			go checkCursorChange(commCh, lastMousePos)
+			go checkCursorChange(logger, commCh, lastMousePos)
 			select {
 			case cursorInfo := <-commCh:
 				if cursorInfo.didCursorMove {
@@ -37,10 +38,10 @@ func (m *mouseCursorHandler) Start(activityCh chan *activity.Type) {
 				}
 			case <-time.After(timeout * time.Millisecond):
 				//timeout, do nothing
-				log.Printf("timeout happened after %vms while checking mouse cursor handler", timeout)
+				logger.Debugf("timeout happened after %vms while checking mouse cursor handler", timeout)
 			}
 		}
-		log.Printf("stopping cursor handler")
+		logger.Infof("stopping cursor handler")
 		return
 	}()
 }
@@ -61,10 +62,10 @@ func (m *mouseCursorHandler) Close() {
 	close(m.tickerCh)
 }
 
-func checkCursorChange(commCh chan *cursorInfo, lastMousePos *mouse.Position) {
+func checkCursorChange(logger *log.Logger, commCh chan *cursorInfo, lastMousePos *mouse.Position) {
 	currentMousePos := mouse.GetPosition()
-	//log.Printf("current mouse position: %v\n", currentMousePos)
-	//log.Printf("last mouse position: %v\n", lastMousePos)
+	logger.Debugf("current mouse position: %v\n", currentMousePos)
+	logger.Debugf("last mouse position: %v\n", lastMousePos)
 	if currentMousePos.MouseX == lastMousePos.MouseX &&
 		currentMousePos.MouseY == lastMousePos.MouseY {
 		commCh <- &cursorInfo{

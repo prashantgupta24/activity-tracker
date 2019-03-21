@@ -9,6 +9,8 @@ import (
 
 type Instance struct {
 	Frequency  int
+	LogLevel   string
+	LogFormat  string
 	activityCh chan *activity.Type
 	quit       chan struct{}
 	services   map[service.Instance]bool

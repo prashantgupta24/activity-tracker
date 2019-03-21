@@ -1,8 +1,9 @@
 package service
 
 import (
-	"log"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/go-vgo/robotgo"
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
@@ -12,28 +13,28 @@ type mouseClickHandler struct {
 	tickerCh chan struct{}
 }
 
-func (m *mouseClickHandler) Start(activityCh chan *activity.Type) {
+func (m *mouseClickHandler) Start(logger *log.Logger, activityCh chan *activity.Type) {
 	m.tickerCh = make(chan struct{})
 	registrationFree := make(chan struct{})
 
 	go func() {
-		go addMouseClickRegistration(activityCh, registrationFree) //run once before first check
+		go addMouseClickRegistration(logger, activityCh, registrationFree) //run once before first check
 		for range m.tickerCh {
-			log.Printf("mouse clicker checked at : %v\n", time.Now())
+			logger.Debugf("mouse clicker checked at : %v\n", time.Now())
 			select {
 			case _, ok := <-registrationFree:
 				if ok {
-					//log.Printf("registration free for mouse click \n")
-					go addMouseClickRegistration(activityCh, registrationFree)
+					logger.Debugf("registration free for mouse click \n")
+					go addMouseClickRegistration(logger, activityCh, registrationFree)
 				} else {
-					//log.Printf("error : channel closed \n")
+					logger.Errorf("error : channel closed \n")
 					return
 				}
 			default:
-				//log.Printf("registration is busy for mouse click handler, do nothing\n")
+				logger.Debugf("registration is busy for mouse click handler, do nothing\n")
 			}
 		}
-		log.Printf("stopping click handler")
+		logger.Infof("stopping click handler")
 		return
 	}()
 }
@@ -54,11 +55,13 @@ func (m *mouseClickHandler) Close() {
 	close(m.tickerCh)
 }
 
-func addMouseClickRegistration(activityCh chan *activity.Type, registrationFree chan struct{}) {
-	log.Printf("adding reg \n")
+func addMouseClickRegistration(logger *log.Logger, activityCh chan *activity.Type,
+	registrationFree chan struct{}) {
+
+	logger.Debugf("adding reg \n")
 	mleft := robotgo.AddEvent("mleft")
 	if mleft {
-		//log.Printf("mleft clicked \n")
+		logger.Debugf("mleft clicked \n")
 		activityCh <- &activity.Type{
 			ActivityType: activity.MOUSE_LEFT_CLICK,
 		}

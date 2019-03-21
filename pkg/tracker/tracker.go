@@ -1,9 +1,11 @@
 package tracker
 
 import (
-	"log"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
+	"github.com/prashantgupta24/activity-tracker/internal/pkg/logging"
 	"github.com/prashantgupta24/activity-tracker/internal/pkg/service"
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
@@ -13,8 +15,10 @@ const (
 )
 
 func (tracker *Instance) StartWithServices(services ...service.Instance) (heartbeatCh chan *Heartbeat) {
+	logger := logging.NewLoggerLevelFormat(tracker.LogLevel, tracker.LogFormat)
+
 	//register service handlers
-	tracker.registerHandlers(services...)
+	tracker.registerHandlers(logger, services...)
 
 	//returned channels
 	heartbeatCh = make(chan *Heartbeat, 1)
@@ -31,23 +35,23 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 		for {
 			select {
 			case <-tickerWorker.C:
-				log.Printf("tracker worker working at %v\n", time.Now())
+				logger.Debugln("tracker worker working")
 				//time to trigger all registered services
 				for service := range tracker.services {
 					service.Trigger()
 				}
 			case <-tickerHeartbeat.C:
-				log.Printf("tracker heartbeat checking at %v\n", time.Now())
+				logger.Debugln("tracker heartbeat checking")
 				var heartbeat *Heartbeat
 				if len(activities) == 0 {
-					//log.Printf("no activity detected in the last %v seconds ...\n", int(timeToCheck))
+					logger.Debugf("no activity detected in the last %v seconds ...\n", int(timeToCheck))
 					heartbeat = &Heartbeat{
 						IsActivity: false,
 						Activity:   nil,
 						Time:       time.Now(),
 					}
 				} else {
-					//log.Printf("activity detected in the last %v seconds ...\n", int(timeToCheck))
+					logger.Debugf("activity detected in the last %v seconds ...\n", int(timeToCheck))
 					heartbeat = &Heartbeat{
 						IsActivity: true,
 						Activity:   activities,
@@ -59,9 +63,9 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 				activities = makeActivityMap() //reset the activities map
 			case activity := <-tracker.activityCh:
 				activities[activity] = time.Now()
-				//log.Printf("activity received: %#v\n", activity)
+				logger.Debugf("activity received: %#v\n", activity)
 			case <-tracker.quit:
-				log.Printf("stopping activity tracker\n")
+				logger.Infof("stopping activity tracker\n")
 				//close all services for a clean exit
 				for service := range tracker.services {
 					service.Close()
@@ -88,13 +92,13 @@ func makeActivityMap() map[*activity.Type]time.Time {
 	return activityMap
 }
 
-func (tracker *Instance) registerHandlers(services ...service.Instance) {
+func (tracker *Instance) registerHandlers(logger *log.Logger, services ...service.Instance) {
 
 	tracker.services = make(map[service.Instance]bool)
 	tracker.activityCh = make(chan *activity.Type, len(services)) // number based on types of activities being tracked
 
 	for _, service := range services {
-		service.Start(tracker.activityCh)
+		service.Start(logger, tracker.activityCh)
 		if _, ok := tracker.services[service]; !ok { //duplicate registration prevention
 			tracker.services[service] = true
 		}
