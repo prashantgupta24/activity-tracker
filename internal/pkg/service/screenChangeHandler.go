@@ -22,15 +22,18 @@ func (s *screenChangeHandler) Start(logger *log.Logger, activityCh chan *activit
 
 	s.tickerCh = make(chan struct{})
 
-	go func() {
+	go func(logger *log.Logger) {
+		handlerLogger := logger.WithFields(log.Fields{
+			"method": "screen-change-handler",
+		})
 		screenSizeX, screenSizeY := robotgo.GetScreenSize()
 		pixelPointX := int(screenSizeX / 2)
 		pixelPointY := int(screenSizeY / 2)
 		lastPixelColor := robotgo.GetPixelColor(pixelPointX, pixelPointY)
 		for range s.tickerCh {
-			logger.Debugf("screen change checked at : %v\n", time.Now())
+			handlerLogger.Debugf("screen change checked")
 			commCh := make(chan *screenInfo)
-			go checkScreenChange(logger, commCh, lastPixelColor, pixelPointX, pixelPointY)
+			go checkScreenChange(handlerLogger, commCh, lastPixelColor, pixelPointX, pixelPointY)
 			select {
 			case screenInfo := <-commCh:
 				if screenInfo.didScreenChange {
@@ -41,12 +44,12 @@ func (s *screenChangeHandler) Start(logger *log.Logger, activityCh chan *activit
 				}
 			case <-time.After(timeout * time.Millisecond):
 				//timeout, do nothing
-				logger.Debugf("timeout happened after %vms while checking screen change handler", timeout)
+				handlerLogger.Debugf("timeout happened after %vms while checking screen change handler", timeout)
 			}
 		}
-		logger.Infof("stopping screen change handler")
+		handlerLogger.Infof("stopping screen change handler")
 		return
-	}()
+	}(logger)
 }
 
 func ScreenChangeHandler() *screenChangeHandler {
@@ -65,20 +68,24 @@ func (s *screenChangeHandler) Close() {
 	close(s.tickerCh)
 }
 
-func checkScreenChange(logger *log.Logger, commCh chan *screenInfo, lastPixelColor string, pixelPointX, pixelPointY int) {
+func checkScreenChange(logger *log.Entry, commCh chan *screenInfo, lastPixelColor string, pixelPointX, pixelPointY int) {
 	currentPixelColor := robotgo.GetPixelColor(pixelPointX, pixelPointY)
-	logger.Debugf("current pixel color: %v\n", currentPixelColor)
-	logger.Debugf("last pixel color: %v\n", lastPixelColor)
+	screenLogger := logger.WithFields(log.Fields{
+		"current-pixel": currentPixelColor,
+		"last-pixel":    lastPixelColor,
+	})
 	//robotgo.MoveMouse(pixelPointX, pixelPointY)
 	if lastPixelColor != currentPixelColor {
 		commCh <- &screenInfo{
 			didScreenChange:   true,
 			currentPixelColor: currentPixelColor,
 		}
+		screenLogger.Debugf("screen changed")
 	} else { //comment this section out to test timeout logic
 		commCh <- &screenInfo{
 			didScreenChange:   false,
 			currentPixelColor: "",
 		}
+		screenLogger.Debugf("screen did not change")
 	}
 }

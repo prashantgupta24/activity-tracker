@@ -24,7 +24,10 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 	heartbeatCh = make(chan *Heartbeat, 1)
 	tracker.quit = make(chan struct{})
 
-	go func(tracker *Instance) {
+	go func(logger *log.Logger, tracker *Instance) {
+		trackerLog := logger.WithFields(log.Fields{
+			"method": "activity-tracker",
+		})
 		timeToCheck := time.Duration(tracker.Frequency)
 		//tickers
 		tickerHeartbeat := time.NewTicker(time.Second * timeToCheck)
@@ -35,13 +38,13 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 		for {
 			select {
 			case <-tickerWorker.C:
-				logger.Debugln("tracker worker working")
+				trackerLog.Debugln("tracker worker working")
 				//time to trigger all registered services
 				for service := range tracker.services {
 					service.Trigger()
 				}
 			case <-tickerHeartbeat.C:
-				logger.Debugln("tracker heartbeat checking")
+				trackerLog.Debugln("tracker heartbeat checking")
 				var heartbeat *Heartbeat
 				if len(activities) == 0 {
 					logger.Debugf("no activity detected in the last %v seconds ...\n", int(timeToCheck))
@@ -51,7 +54,7 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 						Time:       time.Now(),
 					}
 				} else {
-					logger.Debugf("activity detected in the last %v seconds ...\n", int(timeToCheck))
+					trackerLog.Debugf("activity detected in the last %v seconds ...\n", int(timeToCheck))
 					heartbeat = &Heartbeat{
 						IsActivity: true,
 						Activity:   activities,
@@ -61,11 +64,12 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 				}
 				heartbeatCh <- heartbeat
 				activities = makeActivityMap() //reset the activities map
+				trackerLog.Debugln("**************** END OF CHECK ********************")
 			case activity := <-tracker.activityCh:
 				activities[activity] = time.Now()
-				logger.Debugf("activity received: %#v\n", activity)
+				trackerLog.Debugf("activity received: \n%#v\n", activity)
 			case <-tracker.quit:
-				logger.Infof("stopping activity tracker\n")
+				trackerLog.Infof("stopping activity tracker\n")
 				//close all services for a clean exit
 				for service := range tracker.services {
 					service.Close()
@@ -73,7 +77,7 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 				return
 			}
 		}
-	}(tracker)
+	}(logger, tracker)
 
 	return heartbeatCh
 }

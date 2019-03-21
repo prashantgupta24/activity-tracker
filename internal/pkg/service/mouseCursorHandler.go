@@ -22,12 +22,15 @@ func (m *mouseCursorHandler) Start(logger *log.Logger, activityCh chan *activity
 
 	m.tickerCh = make(chan struct{})
 
-	go func() {
+	go func(logger *log.Logger) {
+		handlerLogger := logger.WithFields(log.Fields{
+			"method": "mouse-cursor-handler",
+		})
 		lastMousePos := mouse.GetPosition()
 		for range m.tickerCh {
-			logger.Debugf("mouse cursor checked at : %v\n", time.Now())
+			handlerLogger.Debugf("mouse cursor checked")
 			commCh := make(chan *cursorInfo)
-			go checkCursorChange(logger, commCh, lastMousePos)
+			go checkCursorChange(handlerLogger, commCh, lastMousePos)
 			select {
 			case cursorInfo := <-commCh:
 				if cursorInfo.didCursorMove {
@@ -38,12 +41,12 @@ func (m *mouseCursorHandler) Start(logger *log.Logger, activityCh chan *activity
 				}
 			case <-time.After(timeout * time.Millisecond):
 				//timeout, do nothing
-				logger.Debugf("timeout happened after %vms while checking mouse cursor handler", timeout)
+				handlerLogger.Debugf("timeout happened after %vms while checking mouse cursor handler", timeout)
 			}
 		}
-		logger.Infof("stopping cursor handler")
+		handlerLogger.Infof("stopping cursor handler")
 		return
-	}()
+	}(logger)
 }
 
 func MouseCursorHandler() *mouseCursorHandler {
@@ -62,20 +65,24 @@ func (m *mouseCursorHandler) Close() {
 	close(m.tickerCh)
 }
 
-func checkCursorChange(logger *log.Logger, commCh chan *cursorInfo, lastMousePos *mouse.Position) {
+func checkCursorChange(logger *log.Entry, commCh chan *cursorInfo, lastMousePos *mouse.Position) {
 	currentMousePos := mouse.GetPosition()
-	logger.Debugf("current mouse position: %v\n", currentMousePos)
-	logger.Debugf("last mouse position: %v\n", lastMousePos)
+	cursorLogger := logger.WithFields(log.Fields{
+		"current-mouse-position": currentMousePos,
+		"last-mouse-position":    lastMousePos,
+	})
 	if currentMousePos.MouseX == lastMousePos.MouseX &&
 		currentMousePos.MouseY == lastMousePos.MouseY {
 		commCh <- &cursorInfo{
 			didCursorMove:   false,
 			currentMousePos: nil,
 		}
+		cursorLogger.Debugf("cursor not moved")
 	} else {
 		commCh <- &cursorInfo{
 			didCursorMove:   true,
 			currentMousePos: currentMousePos,
 		}
+		cursorLogger.Debugf("cursor moved")
 	}
 }

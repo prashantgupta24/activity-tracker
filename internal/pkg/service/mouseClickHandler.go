@@ -1,8 +1,6 @@
 package service
 
 import (
-	"time"
-
 	log "github.com/sirupsen/logrus"
 
 	"github.com/go-vgo/robotgo"
@@ -17,26 +15,29 @@ func (m *mouseClickHandler) Start(logger *log.Logger, activityCh chan *activity.
 	m.tickerCh = make(chan struct{})
 	registrationFree := make(chan struct{})
 
-	go func() {
-		go addMouseClickRegistration(logger, activityCh, registrationFree) //run once before first check
+	go func(logger *log.Logger) {
+		handlerLogger := logger.WithFields(log.Fields{
+			"method": "mouse-click-handler",
+		})
+		go addMouseClickRegistration(handlerLogger, activityCh, registrationFree) //run once before first check
 		for range m.tickerCh {
-			logger.Debugf("mouse clicker checked at : %v\n", time.Now())
+			handlerLogger.Debugln("mouse clicker checked")
 			select {
 			case _, ok := <-registrationFree:
 				if ok {
-					logger.Debugf("registration free for mouse click \n")
-					go addMouseClickRegistration(logger, activityCh, registrationFree)
+					handlerLogger.Debugf("registration free \n")
+					go addMouseClickRegistration(handlerLogger, activityCh, registrationFree)
 				} else {
-					logger.Errorf("error : channel closed \n")
+					handlerLogger.Errorf("error : channel closed \n")
 					return
 				}
 			default:
-				logger.Debugf("registration is busy for mouse click handler, do nothing\n")
+				handlerLogger.Debugf("registration is busy, do nothing\n")
 			}
 		}
-		logger.Infof("stopping click handler")
+		handlerLogger.Infof("stopping click handler")
 		return
-	}()
+	}(logger)
 }
 
 func MouseClickHandler() *mouseClickHandler {
@@ -55,10 +56,10 @@ func (m *mouseClickHandler) Close() {
 	close(m.tickerCh)
 }
 
-func addMouseClickRegistration(logger *log.Logger, activityCh chan *activity.Type,
+func addMouseClickRegistration(logger *log.Entry, activityCh chan *activity.Type,
 	registrationFree chan struct{}) {
 
-	logger.Debugf("adding reg \n")
+	logger.Debugf("adding mouse left click registration \n")
 	mleft := robotgo.AddEvent("mleft")
 	if mleft {
 		logger.Debugf("mleft clicked \n")

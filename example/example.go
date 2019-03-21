@@ -1,9 +1,8 @@
 package main
 
 import (
+	"fmt"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 
 	"github.com/prashantgupta24/activity-tracker/internal/pkg/logging"
 	"github.com/prashantgupta24/activity-tracker/pkg/tracker"
@@ -19,6 +18,7 @@ func main() {
 
 	activityTracker := &tracker.Instance{
 		Frequency: frequency,
+		LogLevel:  logging.Info,
 	}
 
 	//This starts the tracker for all services
@@ -33,17 +33,17 @@ func main() {
 		select {
 		case heartbeat := <-heartbeatCh:
 			if !heartbeat.IsActivity {
-				log.Infof("no activity detected in the last %v seconds\n\n", int(frequency))
+				logger.Infof("no activity detected in the last %v seconds\n\n\n", int(frequency))
 			} else {
-				log.Infof("activity detected in the last %v seconds. ", int(frequency))
-				log.Infof("Activity type:\n")
+				logger.Infof("activity detected in the last %v seconds.", int(frequency))
+				logger.Infof("Activity type:\n")
 				for activity, time := range heartbeat.Activity {
-					log.Infof("%v ---> %v\n", activity.ActivityType, time)
+					logger.Infof("%v ---> %v\n", activity.ActivityType, time)
 				}
-				log.Println()
+				fmt.Printf("\n\n\n")
 			}
 		case <-timeToKill.C:
-			log.Infof("time to kill app")
+			logger.Infof("time to kill app")
 			activityTracker.Quit()
 			return
 		}
