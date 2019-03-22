@@ -4,16 +4,21 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/prashantgupta24/activity-tracker/internal/pkg/logging"
 	"github.com/prashantgupta24/activity-tracker/pkg/tracker"
 )
 
 func main() {
-	fmt.Println("starting activity tracker")
+
+	logger := logging.New()
+
+	logger.Infof("starting activity tracker")
 
 	frequency := 5 //value always in seconds
 
 	activityTracker := &tracker.Instance{
 		Frequency: frequency,
+		LogLevel:  logging.Info,
 	}
 
 	//This starts the tracker for all services
@@ -28,17 +33,17 @@ func main() {
 		select {
 		case heartbeat := <-heartbeatCh:
 			if !heartbeat.IsActivity {
-				fmt.Printf("no activity detected in the last %v seconds\n\n", int(frequency))
+				logger.Infof("no activity detected in the last %v seconds\n\n\n", int(frequency))
 			} else {
-				fmt.Printf("activity detected in the last %v seconds. ", int(frequency))
-				fmt.Printf("Activity type:\n")
+				logger.Infof("activity detected in the last %v seconds.", int(frequency))
+				logger.Infof("Activity type:\n")
 				for activity, time := range heartbeat.Activity {
-					fmt.Printf("%v ---> %v\n", activity.ActivityType, time)
+					logger.Infof("%v ---> %v\n", activity.ActivityType, time)
 				}
-				fmt.Println()
+				fmt.Printf("\n\n\n")
 			}
 		case <-timeToKill.C:
-			fmt.Println("time to kill app")
+			logger.Infof("time to kill app")
 			activityTracker.Quit()
 			return
 		}

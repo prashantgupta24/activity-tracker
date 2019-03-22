@@ -1,8 +1,7 @@
 package service
 
 import (
-	"log"
-	"time"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/go-vgo/robotgo"
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
@@ -12,30 +11,33 @@ type mouseClickHandler struct {
 	tickerCh chan struct{}
 }
 
-func (m *mouseClickHandler) Start(activityCh chan *activity.Type) {
+func (m *mouseClickHandler) Start(logger *log.Logger, activityCh chan *activity.Type) {
 	m.tickerCh = make(chan struct{})
 	registrationFree := make(chan struct{})
 
-	go func() {
-		go addMouseClickRegistration(activityCh, registrationFree) //run once before first check
+	go func(logger *log.Logger) {
+		handlerLogger := logger.WithFields(log.Fields{
+			"method": "mouse-click-handler",
+		})
+		go addMouseClickRegistration(handlerLogger, activityCh, registrationFree) //run once before first check
 		for range m.tickerCh {
-			log.Printf("mouse clicker checked at : %v\n", time.Now())
+			handlerLogger.Debugln("mouse clicker checked")
 			select {
 			case _, ok := <-registrationFree:
 				if ok {
-					//log.Printf("registration free for mouse click \n")
-					go addMouseClickRegistration(activityCh, registrationFree)
+					handlerLogger.Debugf("registration free \n")
+					go addMouseClickRegistration(handlerLogger, activityCh, registrationFree)
 				} else {
-					//log.Printf("error : channel closed \n")
+					handlerLogger.Errorf("error : channel closed \n")
 					return
 				}
 			default:
-				//log.Printf("registration is busy for mouse click handler, do nothing\n")
+				handlerLogger.Debugf("registration is busy, do nothing\n")
 			}
 		}
-		log.Printf("stopping click handler")
+		handlerLogger.Infof("stopping click handler")
 		return
-	}()
+	}(logger)
 }
 
 func MouseClickHandler() *mouseClickHandler {
@@ -54,11 +56,13 @@ func (m *mouseClickHandler) Close() {
 	close(m.tickerCh)
 }
 
-func addMouseClickRegistration(activityCh chan *activity.Type, registrationFree chan struct{}) {
-	log.Printf("adding reg \n")
+func addMouseClickRegistration(logger *log.Entry, activityCh chan *activity.Type,
+	registrationFree chan struct{}) {
+
+	logger.Debugf("adding mouse left click registration \n")
 	mleft := robotgo.AddEvent("mleft")
 	if mleft {
-		//log.Printf("mleft clicked \n")
+		logger.Debugf("mleft clicked \n")
 		activityCh <- &activity.Type{
 			ActivityType: activity.MOUSE_LEFT_CLICK,
 		}

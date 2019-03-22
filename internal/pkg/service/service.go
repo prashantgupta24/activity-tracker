@@ -1,13 +1,16 @@
 package service
 
-import "github.com/prashantgupta24/activity-tracker/pkg/activity"
+import (
+	"github.com/prashantgupta24/activity-tracker/pkg/activity"
+	log "github.com/sirupsen/logrus"
+)
 
 const (
 	timeout = 100 //ms
 )
 
 type Instance interface {
-	Start(chan *activity.Type)
+	Start(*log.Logger, chan *activity.Type)
 	Trigger()
 	Close()
 }

@@ -1,8 +1,9 @@
 package service
 
 import (
-	"log"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/prashantgupta24/activity-tracker/internal/pkg/mouse"
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
@@ -17,16 +18,19 @@ type cursorInfo struct {
 	currentMousePos *mouse.Position
 }
 
-func (m *mouseCursorHandler) Start(activityCh chan *activity.Type) {
+func (m *mouseCursorHandler) Start(logger *log.Logger, activityCh chan *activity.Type) {
 
 	m.tickerCh = make(chan struct{})
 
-	go func() {
+	go func(logger *log.Logger) {
+		handlerLogger := logger.WithFields(log.Fields{
+			"method": "mouse-cursor-handler",
+		})
 		lastMousePos := mouse.GetPosition()
 		for range m.tickerCh {
-			log.Printf("mouse cursor checked at : %v\n", time.Now())
+			handlerLogger.Debugf("mouse cursor checked")
 			commCh := make(chan *cursorInfo)
-			go checkCursorChange(commCh, lastMousePos)
+			go checkCursorChange(handlerLogger, commCh, lastMousePos)
 			select {
 			case cursorInfo := <-commCh:
 				if cursorInfo.didCursorMove {
@@ -37,12 +41,12 @@ func (m *mouseCursorHandler) Start(activityCh chan *activity.Type) {
 				}
 			case <-time.After(timeout * time.Millisecond):
 				//timeout, do nothing
-				log.Printf("timeout happened after %vms while checking mouse cursor handler", timeout)
+				handlerLogger.Debugf("timeout happened after %vms while checking mouse cursor handler", timeout)
 			}
 		}
-		log.Printf("stopping cursor handler")
+		handlerLogger.Infof("stopping cursor handler")
 		return
-	}()
+	}(logger)
 }
 
 func MouseCursorHandler() *mouseCursorHandler {
@@ -61,20 +65,24 @@ func (m *mouseCursorHandler) Close() {
 	close(m.tickerCh)
 }
 
-func checkCursorChange(commCh chan *cursorInfo, lastMousePos *mouse.Position) {
+func checkCursorChange(logger *log.Entry, commCh chan *cursorInfo, lastMousePos *mouse.Position) {
 	currentMousePos := mouse.GetPosition()
-	//log.Printf("current mouse position: %v\n", currentMousePos)
-	//log.Printf("last mouse position: %v\n", lastMousePos)
+	cursorLogger := logger.WithFields(log.Fields{
+		"current-mouse-position": currentMousePos,
+		"last-mouse-position":    lastMousePos,
+	})
 	if currentMousePos.MouseX == lastMousePos.MouseX &&
 		currentMousePos.MouseY == lastMousePos.MouseY {
 		commCh <- &cursorInfo{
 			didCursorMove:   false,
 			currentMousePos: nil,
 		}
+		cursorLogger.Debugf("cursor not moved")
 	} else {
 		commCh <- &cursorInfo{
 			didCursorMove:   true,
 			currentMousePos: currentMousePos,
 		}
+		cursorLogger.Debugf("cursor moved")
 	}
 }
