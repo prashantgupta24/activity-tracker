@@ -17,7 +17,7 @@ type Instance struct {
 }
 
 type Heartbeat struct {
-	IsActivity bool
-	Activity   map[*activity.Type]time.Time //activity type with its time
-	Time       time.Time                    //heartbeat time
+	WasAnyActivity bool
+	Activity       map[*activity.Type]time.Time //activity type with its time
+	Time           time.Time                    //heartbeat time
 }

@@ -7,6 +7,10 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
+const (
+	mouseClickActivity = activity.MOUSE_CLICK
+)
+
 type mouseClickHandler struct {
 	tickerCh chan struct{}
 }
@@ -55,7 +59,7 @@ func (m *mouseClickHandler) Trigger() {
 
 func (m *mouseClickHandler) Type() activity.Type {
 	return activity.Type{
-		ActivityType: activity.MOUSE_CLICK,
+		ActivityType: mouseClickActivity,
 	}
 }
 
@@ -71,7 +75,7 @@ func addMouseClickRegistration(logger *log.Entry, activityCh chan *activity.Type
 	if mleft {
 		logger.Debugf("mleft clicked \n")
 		activityCh <- &activity.Type{
-			ActivityType: activity.MOUSE_CLICK,
+			ActivityType: mouseClickActivity,
 		}
 		registrationFree <- struct{}{}
 		return

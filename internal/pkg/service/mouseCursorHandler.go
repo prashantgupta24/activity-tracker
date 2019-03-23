@@ -9,6 +9,10 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
+const (
+	mouseMoveActivity = activity.MOUSE_CURSOR_MOVEMENT
+)
+
 type mouseCursorHandler struct {
 	tickerCh chan struct{}
 }
@@ -35,7 +39,7 @@ func (m *mouseCursorHandler) Start(logger *log.Logger, activityCh chan *activity
 			case cursorInfo := <-commCh:
 				if cursorInfo.didCursorMove {
 					activityCh <- &activity.Type{
-						ActivityType: activity.MOUSE_CURSOR_MOVEMENT,
+						ActivityType: mouseMoveActivity,
 					}
 					lastMousePos = cursorInfo.currentMousePos
 				}
@@ -64,7 +68,7 @@ func (m *mouseCursorHandler) Trigger() {
 
 func (m *mouseCursorHandler) Type() activity.Type {
 	return activity.Type{
-		ActivityType: activity.MOUSE_CURSOR_MOVEMENT,
+		ActivityType: mouseMoveActivity,
 	}
 }
 

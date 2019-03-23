@@ -49,16 +49,16 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 				if len(activities) == 0 {
 					logger.Debugf("no activity detected in the last %v seconds ...\n", int(timeToCheck))
 					heartbeat = &Heartbeat{
-						IsActivity: false,
-						Activity:   nil,
-						Time:       time.Now(),
+						WasAnyActivity: false,
+						Activity:       nil,
+						Time:           time.Now(),
 					}
 				} else {
 					trackerLog.Debugf("activity detected in the last %v seconds ...\n", int(timeToCheck))
 					heartbeat = &Heartbeat{
-						IsActivity: true,
-						Activity:   activities,
-						Time:       time.Now(),
+						WasAnyActivity: true,
+						Activity:       activities,
+						Time:           time.Now(),
 					}
 
 				}
@@ -87,8 +87,14 @@ func (tracker *Instance) Quit() {
 }
 
 func (tracker *Instance) Start() (heartbeatCh chan *Heartbeat) {
-	return tracker.StartWithServices(service.MouseClickHandler(), service.MouseCursorHandler(),
-		service.ScreenChangeHandler())
+	return tracker.StartWithServices(getAllServiceHandlers()...)
+}
+
+func getAllServiceHandlers() []service.Instance {
+	return []service.Instance{
+		service.MouseClickHandler(), service.MouseCursorHandler(),
+		service.ScreenChangeHandler(),
+	}
 }
 
 func makeActivityMap() map[*activity.Type]time.Time {
@@ -102,9 +108,9 @@ func (tracker *Instance) registerHandlers(logger *log.Logger, services ...servic
 	tracker.activityCh = make(chan *activity.Type, len(services)) // number based on types of activities being tracked
 
 	for _, service := range services {
-		service.Start(logger, tracker.activityCh)
 		if _, ok := tracker.services[service.Type()]; !ok { //duplicate registration prevention
 			tracker.services[service.Type()] = service
+			service.Start(logger, tracker.activityCh)
 		}
 	}
 }

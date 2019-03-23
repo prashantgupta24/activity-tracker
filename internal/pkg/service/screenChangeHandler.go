@@ -9,6 +9,10 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
+const (
+	screenChangeActivity = activity.SCREEN_CHANGE
+)
+
 type screenChangeHandler struct {
 	tickerCh chan struct{}
 }
@@ -38,7 +42,7 @@ func (s *screenChangeHandler) Start(logger *log.Logger, activityCh chan *activit
 			case screenInfo := <-commCh:
 				if screenInfo.didScreenChange {
 					activityCh <- &activity.Type{
-						ActivityType: activity.SCREEN_CHANGE,
+						ActivityType: screenChangeActivity,
 					}
 					lastPixelColor = screenInfo.currentPixelColor
 				}
@@ -67,7 +71,7 @@ func (s *screenChangeHandler) Trigger() {
 
 func (s *screenChangeHandler) Type() activity.Type {
 	return activity.Type{
-		ActivityType: activity.SCREEN_CHANGE,
+		ActivityType: screenChangeActivity,
 	}
 }
 
