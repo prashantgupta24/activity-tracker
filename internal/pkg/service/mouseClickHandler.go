@@ -52,6 +52,13 @@ func (m *mouseClickHandler) Trigger() {
 		//service is blocked, handle it somehow?
 	}
 }
+
+func (m *mouseClickHandler) Type() activity.Type {
+	return activity.Type{
+		ActivityType: activity.MOUSE_CLICK,
+	}
+}
+
 func (m *mouseClickHandler) Close() {
 	close(m.tickerCh)
 }
@@ -64,7 +71,7 @@ func addMouseClickRegistration(logger *log.Entry, activityCh chan *activity.Type
 	if mleft {
 		logger.Debugf("mleft clicked \n")
 		activityCh <- &activity.Type{
-			ActivityType: activity.MOUSE_LEFT_CLICK,
+			ActivityType: activity.MOUSE_CLICK,
 		}
 		registrationFree <- struct{}{}
 		return

@@ -40,7 +40,7 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 			case <-tickerWorker.C:
 				trackerLog.Debugln("tracker worker working")
 				//time to trigger all registered services
-				for service := range tracker.services {
+				for _, service := range tracker.services {
 					service.Trigger()
 				}
 			case <-tickerHeartbeat.C:
@@ -71,7 +71,7 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 			case <-tracker.quit:
 				trackerLog.Infof("stopping activity tracker\n")
 				//close all services for a clean exit
-				for service := range tracker.services {
+				for _, service := range tracker.services {
 					service.Close()
 				}
 				return
@@ -98,14 +98,13 @@ func makeActivityMap() map[*activity.Type]time.Time {
 
 func (tracker *Instance) registerHandlers(logger *log.Logger, services ...service.Instance) {
 
-	tracker.services = make(map[service.Instance]bool)
+	tracker.services = make(map[activity.Type]service.Instance)
 	tracker.activityCh = make(chan *activity.Type, len(services)) // number based on types of activities being tracked
 
 	for _, service := range services {
 		service.Start(logger, tracker.activityCh)
-		if _, ok := tracker.services[service]; !ok { //duplicate registration prevention
-			tracker.services[service] = true
+		if _, ok := tracker.services[service.Type()]; !ok { //duplicate registration prevention
+			tracker.services[service.Type()] = service
 		}
-
 	}
 }

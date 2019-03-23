@@ -11,6 +11,7 @@ const (
 
 type Instance interface {
 	Start(*log.Logger, chan *activity.Type)
+	Type() activity.Type
 	Trigger()
 	Close()
 }

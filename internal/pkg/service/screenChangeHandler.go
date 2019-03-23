@@ -64,6 +64,13 @@ func (s *screenChangeHandler) Trigger() {
 		//service is blocked, handle it somehow?
 	}
 }
+
+func (s *screenChangeHandler) Type() activity.Type {
+	return activity.Type{
+		ActivityType: activity.SCREEN_CHANGE,
+	}
+}
+
 func (s *screenChangeHandler) Close() {
 	close(s.tickerCh)
 }

@@ -61,6 +61,13 @@ func (m *mouseCursorHandler) Trigger() {
 		//service is blocked, handle it somehow?
 	}
 }
+
+func (m *mouseCursorHandler) Type() activity.Type {
+	return activity.Type{
+		ActivityType: activity.MOUSE_CURSOR_MOVEMENT,
+	}
+}
+
 func (m *mouseCursorHandler) Close() {
 	close(m.tickerCh)
 }

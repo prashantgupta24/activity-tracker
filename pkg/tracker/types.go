@@ -13,11 +13,11 @@ type Instance struct {
 	LogFormat  string
 	activityCh chan *activity.Type
 	quit       chan struct{}
-	services   map[service.Instance]bool
+	services   map[activity.Type]service.Instance
 }
 
 type Heartbeat struct {
 	IsActivity bool
-	Activity   map[*activity.Type]time.Time
-	Time       time.Time
+	Activity   map[*activity.Type]time.Time //activity type with its time
+	Time       time.Time                    //heartbeat time
 }
