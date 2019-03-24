@@ -29,8 +29,8 @@ go:
 #   - glide install
   #- go install -mod vendor github.com/golangci/golangci-lint/cmd/golangci-lint
  install:
-    - go get -v github.com/Masterminds/glide
-    - glide install
+  - go get -v github.com/Masterminds/glide
+  - glide install
 # script always runs to completion (set +e). If we have linter issues AND a
 # failing test, we want to see both. Configure golangci-lint with a
 # .golangci.yml file at the top level of your repo.
