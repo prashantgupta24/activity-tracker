@@ -14,6 +14,7 @@ const (
 	preHeartbeatTime = time.Millisecond * 100
 )
 
+//StartWithServices starts the tracker with a set of services
 func (tracker *Instance) StartWithServices(services ...service.Instance) (heartbeatCh chan *Heartbeat) {
 	logger := logging.NewLoggerLevelFormat(tracker.LogLevel, tracker.LogFormat)
 
@@ -82,10 +83,12 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 	return heartbeatCh
 }
 
+//Quit the tracker app
 func (tracker *Instance) Quit() {
 	tracker.quit <- struct{}{}
 }
 
+//Start the tracker with all possible services
 func (tracker *Instance) Start() (heartbeatCh chan *Heartbeat) {
 	return tracker.StartWithServices(getAllServiceHandlers()...)
 }

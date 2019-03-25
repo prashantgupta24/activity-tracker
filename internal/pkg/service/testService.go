@@ -5,33 +5,42 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type testHandler struct {
+const (
+	testActivity = activity.TestActivity
+)
+
+//TestHandlerStruct is a test handler
+type TestHandlerStruct struct {
 	tickerCh chan struct{}
 }
 
-func (h *testHandler) Start(logger *log.Logger, activityCh chan *activity.Type) {
+//Start the service
+func (h *TestHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Type) {
 	h.tickerCh = make(chan struct{})
 	go func(logger *log.Logger) {
 		for range h.tickerCh {
 			activityCh <- &activity.Type{
-				ActivityType: activity.TEST_ACTIVITY,
+				ActivityType: testActivity,
 			}
 		}
 		return
 	}(logger)
 }
 
-func TestHandler() *testHandler {
-	return &testHandler{}
+//TestHandler returns an instance of the struct
+func TestHandler() *TestHandlerStruct {
+	return &TestHandlerStruct{}
 }
 
-func (h *testHandler) Type() activity.Type {
+//Type return the type of handler
+func (h *TestHandlerStruct) Type() activity.Type {
 	return activity.Type{
-		ActivityType: activity.TEST_ACTIVITY,
+		ActivityType: testActivity,
 	}
 }
 
-func (h *testHandler) Trigger() {
+//Trigger the service
+func (h *TestHandlerStruct) Trigger() {
 	select {
 	case h.tickerCh <- struct{}{}:
 	default:
@@ -39,6 +48,7 @@ func (h *testHandler) Trigger() {
 	}
 }
 
-func (h *testHandler) Close() {
+//Close closes the handler
+func (h *TestHandlerStruct) Close() {
 	close(h.tickerCh)
 }

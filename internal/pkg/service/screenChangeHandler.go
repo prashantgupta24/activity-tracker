@@ -10,10 +10,11 @@ import (
 )
 
 const (
-	screenChangeActivity = activity.SCREEN_CHANGE
+	screenChangeActivity = activity.ScreenChange
 )
 
-type screenChangeHandler struct {
+//ScreenChangeHandlerStruct is the handler for screen changes
+type ScreenChangeHandlerStruct struct {
 	tickerCh chan struct{}
 }
 
@@ -22,7 +23,8 @@ type screenInfo struct {
 	currentPixelColor string
 }
 
-func (s *screenChangeHandler) Start(logger *log.Logger, activityCh chan *activity.Type) {
+//Start the service
+func (s *ScreenChangeHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Type) {
 
 	s.tickerCh = make(chan struct{})
 
@@ -56,11 +58,13 @@ func (s *screenChangeHandler) Start(logger *log.Logger, activityCh chan *activit
 	}(logger)
 }
 
-func ScreenChangeHandler() *screenChangeHandler {
-	return &screenChangeHandler{}
+//ScreenChangeHandler returns an instance of the struct
+func ScreenChangeHandler() *ScreenChangeHandlerStruct {
+	return &ScreenChangeHandlerStruct{}
 }
 
-func (s *screenChangeHandler) Trigger() {
+//Trigger the service
+func (s *ScreenChangeHandlerStruct) Trigger() {
 	//doing it the non-blocking sender way
 	select {
 	case s.tickerCh <- struct{}{}:
@@ -69,13 +73,15 @@ func (s *screenChangeHandler) Trigger() {
 	}
 }
 
-func (s *screenChangeHandler) Type() activity.Type {
+//Type return the type of handler
+func (s *ScreenChangeHandlerStruct) Type() activity.Type {
 	return activity.Type{
 		ActivityType: screenChangeActivity,
 	}
 }
 
-func (s *screenChangeHandler) Close() {
+//Close closes the handler
+func (s *ScreenChangeHandlerStruct) Close() {
 	close(s.tickerCh)
 }
 
