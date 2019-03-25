@@ -8,14 +8,16 @@ import (
 )
 
 const (
-	mouseClickActivity = activity.MOUSE_CLICK
+	mouseClickActivity = activity.MouseClick
 )
 
-type mouseClickHandler struct {
+//MouseClickHandlerStruct is the handler for mouse clicks
+type MouseClickHandlerStruct struct {
 	tickerCh chan struct{}
 }
 
-func (m *mouseClickHandler) Start(logger *log.Logger, activityCh chan *activity.Type) {
+//Start the service
+func (m *MouseClickHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Type) {
 	m.tickerCh = make(chan struct{})
 	registrationFree := make(chan struct{})
 
@@ -44,11 +46,13 @@ func (m *mouseClickHandler) Start(logger *log.Logger, activityCh chan *activity.
 	}(logger)
 }
 
-func MouseClickHandler() *mouseClickHandler {
-	return &mouseClickHandler{}
+//MouseClickHandler returns an instance of the struct
+func MouseClickHandler() *MouseClickHandlerStruct {
+	return &MouseClickHandlerStruct{}
 }
 
-func (m *mouseClickHandler) Trigger() {
+//Trigger the service
+func (m *MouseClickHandlerStruct) Trigger() {
 	//doing it the non-blocking sender way
 	select {
 	case m.tickerCh <- struct{}{}:
@@ -57,13 +61,15 @@ func (m *mouseClickHandler) Trigger() {
 	}
 }
 
-func (m *mouseClickHandler) Type() activity.Type {
+//Type return the type of handler
+func (m *MouseClickHandlerStruct) Type() activity.Type {
 	return activity.Type{
 		ActivityType: mouseClickActivity,
 	}
 }
 
-func (m *mouseClickHandler) Close() {
+//Close closes the handler
+func (m *MouseClickHandlerStruct) Close() {
 	close(m.tickerCh)
 }
 

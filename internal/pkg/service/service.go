@@ -9,6 +9,7 @@ const (
 	timeout = 100 //ms
 )
 
+//Instance is the main interface for a service for the tracker
 type Instance interface {
 	Start(*log.Logger, chan *activity.Type)
 	Type() activity.Type

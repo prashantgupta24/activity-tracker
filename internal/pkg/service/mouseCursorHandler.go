@@ -10,10 +10,11 @@ import (
 )
 
 const (
-	mouseMoveActivity = activity.MOUSE_CURSOR_MOVEMENT
+	mouseMoveActivity = activity.MouseCursorMovement
 )
 
-type mouseCursorHandler struct {
+//MouseCursorHandlerStruct is the handler for mouse cursor movements
+type MouseCursorHandlerStruct struct {
 	tickerCh chan struct{}
 }
 
@@ -22,7 +23,8 @@ type cursorInfo struct {
 	currentMousePos *mouse.Position
 }
 
-func (m *mouseCursorHandler) Start(logger *log.Logger, activityCh chan *activity.Type) {
+//Start the service
+func (m *MouseCursorHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Type) {
 
 	m.tickerCh = make(chan struct{})
 
@@ -53,11 +55,13 @@ func (m *mouseCursorHandler) Start(logger *log.Logger, activityCh chan *activity
 	}(logger)
 }
 
-func MouseCursorHandler() *mouseCursorHandler {
-	return &mouseCursorHandler{}
+//MouseCursorHandler returns an instance of the struct
+func MouseCursorHandler() *MouseCursorHandlerStruct {
+	return &MouseCursorHandlerStruct{}
 }
 
-func (m *mouseCursorHandler) Trigger() {
+//Trigger the service
+func (m *MouseCursorHandlerStruct) Trigger() {
 	//doing it the non-blocking sender way
 	select {
 	case m.tickerCh <- struct{}{}:
@@ -66,13 +70,15 @@ func (m *mouseCursorHandler) Trigger() {
 	}
 }
 
-func (m *mouseCursorHandler) Type() activity.Type {
+//Type return the type of handler
+func (m *MouseCursorHandlerStruct) Type() activity.Type {
 	return activity.Type{
 		ActivityType: mouseMoveActivity,
 	}
 }
 
-func (m *mouseCursorHandler) Close() {
+//Close closes the handler
+func (m *MouseCursorHandlerStruct) Close() {
 	close(m.tickerCh)
 }
 

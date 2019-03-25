@@ -1,11 +1,23 @@
-example-start:
-	go run example/example.go
+COVER_PROFILE=cover.out
+COVER_HTML=cover.html
 
-test: vet
-	go test -v -failfast -race ./...
+.PHONY: $(COVER_PROFILE) $(COVER_HTML)
+
+all: coverage vet lint
+
+coverage: $(COVER_HTML)
+
+$(COVER_HTML): $(COVER_PROFILE)
+	go tool cover -html=$(COVER_PROFILE) -o $(COVER_HTML)
+
+$(COVER_PROFILE):
+	go test -v -failfast -race -coverprofile=$(COVER_PROFILE) ./...
 
 vet:
 	go vet $(shell glide nv)
 
 lint:
-	go list ./... | xargs -L1 golint -set_exit_status
+	go list ./... | grep -v vendor | xargs -L1 golint -set_exit_status
+
+example-start:
+	go run example/example.go

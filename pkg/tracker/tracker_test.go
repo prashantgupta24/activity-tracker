@@ -24,13 +24,13 @@ func TestSuite(t *testing.T) {
 func (suite *TestTracker) SetupSuite() {
 
 	suite.activities = append(suite.activities, &activity.Type{
-		ActivityType: activity.MOUSE_CLICK,
+		ActivityType: activity.MouseClick,
 	})
 	suite.activities = append(suite.activities, &activity.Type{
-		ActivityType: activity.MOUSE_CURSOR_MOVEMENT,
+		ActivityType: activity.MouseCursorMovement,
 	})
 	suite.activities = append(suite.activities, &activity.Type{
-		ActivityType: activity.SCREEN_CHANGE,
+		ActivityType: activity.ScreenChange,
 	})
 }
 
@@ -47,8 +47,8 @@ func (suite *TestTracker) TestDupServiceRegistration() {
 	t := suite.T()
 	tracker := suite.tracker
 
-	tracker.StartWithServices(service.MouseClickHandler(),
-		service.MouseClickHandler())
+	tracker.StartWithServices(service.TestHandler(),
+		service.TestHandler())
 
 	assert.Equal(t, 1, len(tracker.services), "duplicate services should not be registered")
 }
@@ -127,7 +127,7 @@ func (suite *TestTracker) TestServiceTestHandler() {
 		assert.NotNil(t, heartbeat)
 		assert.True(t, heartbeat.WasAnyActivity, "there should have been activity")
 		testActivity := &activity.Type{
-			ActivityType: activity.TEST_ACTIVITY,
+			ActivityType: activity.TestActivity,
 		}
 		for activity, time := range heartbeat.Activity {
 			assert.Equal(t, activity, testActivity, "should be of test activity type")

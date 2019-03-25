@@ -5,6 +5,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+/*
+Logs can have either JSONFormat or TextFormat
+*/
 const (
 	JSONFormat = "json"
 	TextFormat = "text"
@@ -13,6 +16,7 @@ const (
 	Debug = "debug"
 )
 
+//New instantiates a new logger with default options
 func New() *log.Logger {
 	logger := log.New()
 	logger.Formatter = &logrus.TextFormatter{
@@ -22,6 +26,7 @@ func New() *log.Logger {
 	return logger
 }
 
+//NewLoggerLevel instantiates a new logger with level defined by user
 func NewLoggerLevel(logLevel string) *log.Logger {
 	logger := log.New()
 	logger.Formatter = &logrus.TextFormatter{
@@ -37,6 +42,7 @@ func NewLoggerLevel(logLevel string) *log.Logger {
 	return logger
 }
 
+//NewLoggerFormat instantiates a new logger with format defined by user
 func NewLoggerFormat(format string) *log.Logger {
 	logger := log.New()
 
@@ -53,6 +59,7 @@ func NewLoggerFormat(format string) *log.Logger {
 	return logger
 }
 
+//NewLoggerLevelFormat instantiates a new logger with both level and format defined by user
 func NewLoggerLevelFormat(logLevel string, format string) *log.Logger {
 	logger := log.New()
 	switch {
