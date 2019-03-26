@@ -2,6 +2,13 @@ sudo: false
 
 language: go
 
+go:
+  # - 1.7.x
+  # - 1.8.x
+  # - 1.9.x
+  # - 1.10.x
+  - 1.11.x
+
 addons:
    apt:
       packages:
@@ -12,7 +19,7 @@ addons:
          - libxkbcommon-dev
          - xsel
          - xclip  
-         
+
 # Don't email me the results of the test runs.
 notifications:
   email: false
@@ -23,8 +30,3 @@ matrix:
     script:  go test -v ./...
   - go: "1.11.x"
     script: go test -v -mod=vendor ./...
-
-env:
-  - GO111MODULE=on
-
-install: true
