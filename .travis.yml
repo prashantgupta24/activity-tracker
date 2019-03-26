@@ -23,9 +23,9 @@ addons:
 # Don't email me the results of the test runs.
 notifications:
   email: false
-  
+
 before_install:
   - go get -t -v ./...
 
 script:
-  - go test -v -failfast -race -coverprofile=coverage.txt ./...
+  - go test -v -failfast -race ./...
