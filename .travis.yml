@@ -1,5 +1,3 @@
-sudo: false
-
 language: go
 
 go:
@@ -29,4 +27,7 @@ before_install:
   - go get -t -v ./...
 
 script:
-  - go test -v -failfast -race ./...
+  - go test -v -failfast -race -coverprofile=coverage.txt ./...
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
