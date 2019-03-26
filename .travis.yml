@@ -2,6 +2,17 @@ sudo: false
 
 language: go
 
+addons:
+   apt:
+      packages:
+         - libx11-dev xorg-dev
+         - libxtst-dev libpng++-dev
+         - xcb libxcb-xkb-dev x11-xkb-utils libx11-xcb-dev libxkbcommon-x11-dev
+        #  - libusb-dev
+         - libxkbcommon-dev
+         - xsel
+         - xclip  
+         
 # Don't email me the results of the test runs.
 notifications:
   email: false
