@@ -1,0 +1,78 @@
+# Object files
+.DS_Store
+.vscode
+.idea
+
+# Examples
+examples/screen/screen
+examples/screen/saveCapture.png
+#
+examples/bitmap/test.png
+examples/bitmap/test2.png
+examples/bitmap/test.tif
+examples/bitmap/test31.tif
+examples/bitmap/tocbitmap.png
+examples/bitmap/teststr.png
+test/test.png
+
+# Debug files
+*.dSYM/
+*.su
+debug
+
+# Architecture specific extensions/prefixes
+*.[568vq]
+[568vq].out
+
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
+
+_testmain.go
+
+*.o
+*.ko
+*.obj
+*.elf
+
+# Precompiled Headers
+*.gch
+*.pch
+
+#
+cdeps/hook
+event/hook
+
+# Libraries
+*.lib
+# !cdeps/win32/libpng.lib
+# !cdeps/win32/zlib.lib
+# !cdeps/win64/libpng.lib
+# !cdeps/win64/zlib.lib
+# ##
+*.a
+!cdeps/mac/libpng.a
+!cdeps/win32/libpng.a
+!cdeps/win64/libpng.a
+#
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
+ .glide/
