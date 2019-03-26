@@ -17,14 +17,15 @@ type TestHandlerStruct struct {
 //Start the service
 func (h *TestHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Type) {
 	h.tickerCh = make(chan struct{})
-	go func(logger *log.Logger) {
+	go func() {
 		for range h.tickerCh {
 			activityCh <- &activity.Type{
 				ActivityType: testActivity,
 			}
 		}
+		logger.Infof("stopping test handler")
 		return
-	}(logger)
+	}()
 }
 
 //TestHandler returns an instance of the struct

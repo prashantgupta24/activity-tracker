@@ -1,7 +1,9 @@
 package tracker
 
 import (
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/prashantgupta24/activity-tracker/internal/pkg/service"
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
@@ -106,16 +108,6 @@ func (suite *TestTracker) TestActivitiesAllAtOnce() {
 	}
 }
 
-func (suite *TestTracker) TestAllServicesStart() {
-	//t := suite.T()
-
-	// activityCh := make(chan *activity.Type)
-	// logger := logging.New()
-	// for _, service := range getAllServiceHandlers() {
-	// 	service.Start(logger, activityCh)
-	// }
-}
-
 func (suite *TestTracker) TestServiceTestHandler() {
 	t := suite.T()
 	tracker := suite.tracker
@@ -136,11 +128,38 @@ func (suite *TestTracker) TestServiceTestHandler() {
 	}
 }
 
-// func (suite *TestTracker) TestServiceClose() {
-// 	//t := suite.T()
-// 	tracker := suite.tracker
+func (suite *TestTracker) TestTrackerStartAndQuit() {
+	t := suite.T()
+	tracker := suite.tracker
 
-// 	testHandler := service.TestHandler()
-// 	tracker.StartWithServices(testHandler)
-// 	tracker.Quit()
-// }
+	numServices := len(getAllServiceHandlers())
+	heartbeatCh := tracker.Start()
+
+	assert.Equal(t, numServices, len(tracker.services), "tracker should have started with %v services by default", numServices)
+
+	//close
+	var wg sync.WaitGroup
+	isHeartbeatStopped := make(chan bool)
+
+	wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		for heartbeat := range heartbeatCh {
+			assert.IsType(t, &Heartbeat{}, heartbeat, "type not equal")
+		}
+		wg.Done()
+	}(&wg)
+
+	tracker.Quit()
+
+	go func(isHeartbeatStopped chan bool) {
+		wg.Wait()
+		isHeartbeatStopped <- true
+	}(isHeartbeatStopped)
+
+	select {
+	case <-time.After(time.Second):
+		assert.Fail(t, "heartbeat should have stopped after quit")
+	case val := <-isHeartbeatStopped:
+		assert.True(t, val)
+	}
+}

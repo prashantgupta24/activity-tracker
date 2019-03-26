@@ -21,8 +21,9 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 	//register service handlers
 	tracker.registerHandlers(logger, services...)
 
-	//returned channels
+	//returned channel
 	heartbeatCh = make(chan *Heartbeat, 1)
+
 	tracker.quit = make(chan struct{})
 
 	go func(logger *log.Logger, tracker *Instance) {
@@ -61,7 +62,6 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 						Activity:       activities,
 						Time:           time.Now(),
 					}
-
 				}
 				heartbeatCh <- heartbeat
 				activities = makeActivityMap() //reset the activities map
@@ -75,6 +75,7 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 				for _, service := range tracker.services {
 					service.Close()
 				}
+				close(heartbeatCh)
 				return
 			}
 		}
