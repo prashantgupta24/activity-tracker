@@ -15,6 +15,9 @@ addons:
          - xsel
          - xclip
 
+notifications:
+  email: false
+
 before_install:
   - go get -t -v ./...
 
