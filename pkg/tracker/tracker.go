@@ -14,14 +14,16 @@ const (
 	preHeartbeatTime = time.Millisecond * 100
 )
 
+//StartWithServices starts the tracker with a set of services
 func (tracker *Instance) StartWithServices(services ...service.Instance) (heartbeatCh chan *Heartbeat) {
 	logger := logging.NewLoggerLevelFormat(tracker.LogLevel, tracker.LogFormat)
 
 	//register service handlers
 	tracker.registerHandlers(logger, services...)
 
-	//returned channels
+	//returned channel
 	heartbeatCh = make(chan *Heartbeat, 1)
+
 	tracker.quit = make(chan struct{})
 
 	go func(logger *log.Logger, tracker *Instance) {
@@ -40,7 +42,7 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 			case <-tickerWorker.C:
 				trackerLog.Debugln("tracker worker working")
 				//time to trigger all registered services
-				for service := range tracker.services {
+				for _, service := range tracker.services {
 					service.Trigger()
 				}
 			case <-tickerHeartbeat.C:
@@ -49,18 +51,17 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 				if len(activities) == 0 {
 					logger.Debugf("no activity detected in the last %v seconds ...\n", int(timeToCheck))
 					heartbeat = &Heartbeat{
-						IsActivity: false,
-						Activity:   nil,
-						Time:       time.Now(),
+						WasAnyActivity: false,
+						Activity:       nil,
+						Time:           time.Now(),
 					}
 				} else {
 					trackerLog.Debugf("activity detected in the last %v seconds ...\n", int(timeToCheck))
 					heartbeat = &Heartbeat{
-						IsActivity: true,
-						Activity:   activities,
-						Time:       time.Now(),
+						WasAnyActivity: true,
+						Activity:       activities,
+						Time:           time.Now(),
 					}
-
 				}
 				heartbeatCh <- heartbeat
 				activities = makeActivityMap() //reset the activities map
@@ -71,9 +72,10 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 			case <-tracker.quit:
 				trackerLog.Infof("stopping activity tracker\n")
 				//close all services for a clean exit
-				for service := range tracker.services {
+				for _, service := range tracker.services {
 					service.Close()
 				}
+				close(heartbeatCh)
 				return
 			}
 		}
@@ -82,13 +84,21 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 	return heartbeatCh
 }
 
+//Quit the tracker app
 func (tracker *Instance) Quit() {
 	tracker.quit <- struct{}{}
 }
 
+//Start the tracker with all possible services
 func (tracker *Instance) Start() (heartbeatCh chan *Heartbeat) {
-	return tracker.StartWithServices(service.MouseClickHandler(), service.MouseCursorHandler(),
-		service.ScreenChangeHandler())
+	return tracker.StartWithServices(getAllServiceHandlers()...)
+}
+
+func getAllServiceHandlers() []service.Instance {
+	return []service.Instance{
+		service.MouseClickHandler(), service.MouseCursorHandler(),
+		service.ScreenChangeHandler(),
+	}
 }
 
 func makeActivityMap() map[*activity.Type]time.Time {
@@ -98,14 +108,13 @@ func makeActivityMap() map[*activity.Type]time.Time {
 
 func (tracker *Instance) registerHandlers(logger *log.Logger, services ...service.Instance) {
 
-	tracker.services = make(map[service.Instance]bool)
+	tracker.services = make(map[activity.Type]service.Instance)
 	tracker.activityCh = make(chan *activity.Type, len(services)) // number based on types of activities being tracked
 
 	for _, service := range services {
-		service.Start(logger, tracker.activityCh)
-		if _, ok := tracker.services[service]; !ok { //duplicate registration prevention
-			tracker.services[service] = true
+		if _, ok := tracker.services[service.Type()]; !ok { //duplicate registration prevention
+			tracker.services[service.Type()] = service
+			service.Start(logger, tracker.activityCh)
 		}
-
 	}
 }

@@ -32,7 +32,7 @@ func main() {
 	for {
 		select {
 		case heartbeat := <-heartbeatCh:
-			if !heartbeat.IsActivity {
+			if !heartbeat.WasAnyActivity {
 				logger.Infof("no activity detected in the last %v seconds\n\n\n", int(frequency))
 			} else {
 				logger.Infof("activity detected in the last %v seconds.", int(frequency))

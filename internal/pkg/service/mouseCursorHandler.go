@@ -9,7 +9,12 @@ import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
-type mouseCursorHandler struct {
+const (
+	mouseMoveActivity = activity.MouseCursorMovement
+)
+
+//MouseCursorHandlerStruct is the handler for mouse cursor movements
+type MouseCursorHandlerStruct struct {
 	tickerCh chan struct{}
 }
 
@@ -18,7 +23,8 @@ type cursorInfo struct {
 	currentMousePos *mouse.Position
 }
 
-func (m *mouseCursorHandler) Start(logger *log.Logger, activityCh chan *activity.Type) {
+//Start the service
+func (m *MouseCursorHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Type) {
 
 	m.tickerCh = make(chan struct{})
 
@@ -35,7 +41,7 @@ func (m *mouseCursorHandler) Start(logger *log.Logger, activityCh chan *activity
 			case cursorInfo := <-commCh:
 				if cursorInfo.didCursorMove {
 					activityCh <- &activity.Type{
-						ActivityType: activity.MOUSE_CURSOR_MOVEMENT,
+						ActivityType: mouseMoveActivity,
 					}
 					lastMousePos = cursorInfo.currentMousePos
 				}
@@ -49,11 +55,13 @@ func (m *mouseCursorHandler) Start(logger *log.Logger, activityCh chan *activity
 	}(logger)
 }
 
-func MouseCursorHandler() *mouseCursorHandler {
-	return &mouseCursorHandler{}
+//MouseCursorHandler returns an instance of the struct
+func MouseCursorHandler() *MouseCursorHandlerStruct {
+	return &MouseCursorHandlerStruct{}
 }
 
-func (m *mouseCursorHandler) Trigger() {
+//Trigger the service
+func (m *MouseCursorHandlerStruct) Trigger() {
 	//doing it the non-blocking sender way
 	select {
 	case m.tickerCh <- struct{}{}:
@@ -61,7 +69,16 @@ func (m *mouseCursorHandler) Trigger() {
 		//service is blocked, handle it somehow?
 	}
 }
-func (m *mouseCursorHandler) Close() {
+
+//Type return the type of handler
+func (m *MouseCursorHandlerStruct) Type() activity.Type {
+	return activity.Type{
+		ActivityType: mouseMoveActivity,
+	}
+}
+
+//Close closes the handler
+func (m *MouseCursorHandlerStruct) Close() {
 	close(m.tickerCh)
 }
 
