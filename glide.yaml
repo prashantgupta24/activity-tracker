@@ -1,6 +1,0 @@
-package: github.com/prashantgupta24/activity-tracker
-import:
-- package: github.com/go-vgo/robotgo
-  version: ^0.80.0
-- package: github.com/sirupsen/logrus
-  version: ~1.4.0
