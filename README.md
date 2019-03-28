@@ -6,5 +6,5 @@ It is a libary that lets you monitor certain activities on your machine, and sen
 
 For example, let's say you want to monitor whether there was any mouse click on your machine and you want to be notified every 5 minutes if there was one or not. What you do is start the `Activity Tracker` with just the `mouse click` service and `heartbeat` frequency set to 5 minutes. The `Start` function of the library gives you a channel which receives a `heartbeat` every 5 minutes, and it has details on whether there was a `click` in those 5 minutes.
 
-[version-badge]: https://img.shields.io/github/release/prashantgupta24/clipboard-manager.svg
+[version-badge]: https://img.shields.io/github/release/prashantgupta24/activity-tracker.svg
 [RELEASES]: https://github.com/prashantgupta24/activity-tracker/releases
