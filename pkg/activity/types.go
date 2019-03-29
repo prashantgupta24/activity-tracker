@@ -17,7 +17,7 @@ const (
 	TestActivity        activityType = "test-activity"
 )
 
-//Type gets the type of Activity
-type Type struct {
-	ActivityType activityType
+//Instance is an instance of Activity
+type Instance struct {
+	Type activityType
 }

@@ -14,7 +14,7 @@ func main() {
 
 	logger.Infof("starting activity tracker")
 
-	frequency := 5 //value always in seconds
+	frequency := 12 //value always in seconds
 
 	activityTracker := &tracker.Instance{
 		Frequency: frequency,
@@ -27,7 +27,7 @@ func main() {
 	//if you only want to track certain services, you can use StartWithServices
 	//heartbeatCh := activityTracker.StartWithServices(service.MouseClickHandler(), service.MouseCursorHandler())
 
-	timeToKill := time.NewTicker(time.Second * 30)
+	timeToKill := time.NewTicker(time.Second * 60)
 
 	for {
 		select {
@@ -35,10 +35,12 @@ func main() {
 			if !heartbeat.WasAnyActivity {
 				logger.Infof("no activity detected in the last %v seconds\n\n\n", int(frequency))
 			} else {
+				logger.Info(heartbeat.ActivityMap)
 				logger.Infof("activity detected in the last %v seconds.", int(frequency))
 				logger.Infof("Activity type:\n")
-				for activity, time := range heartbeat.Activity {
-					logger.Infof("%v ---> %v\n", activity.ActivityType, time)
+				for activity, time := range heartbeat.ActivityMap {
+					//logger.Infof("%v ---> %v\n", activity.ActivityType, time)
+					logger.Infof("activity : %v times: %v\n", activity, time)
 				}
 				fmt.Printf("\n\n\n")
 			}

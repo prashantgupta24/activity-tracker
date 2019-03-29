@@ -30,17 +30,23 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 		trackerLog := logger.WithFields(log.Fields{
 			"method": "activity-tracker",
 		})
+
 		timeToCheck := time.Duration(tracker.Frequency)
 		//tickers
-		tickerHeartbeat := time.NewTicker(time.Second * timeToCheck)
-		tickerWorker := time.NewTicker(time.Second*timeToCheck - preHeartbeatTime)
+		tickerHeartbeat := time.NewTicker(timeToCheck * time.Second)
+		var tickerWorker *time.Ticker
+		if timeToCheck >= 10 {
+			tickerWorker = time.NewTicker((timeToCheck / 5 * time.Second) - preHeartbeatTime)
+		} else {
+			tickerWorker = time.NewTicker(timeToCheck*time.Second - preHeartbeatTime)
+		}
 
-		activities := makeActivityMap()
+		activityMap := makeActivityMap()
 
 		for {
 			select {
 			case <-tickerWorker.C:
-				trackerLog.Debugln("tracker worker working")
+				trackerLog.Infof("tracker worker working")
 				//time to trigger all registered services
 				for _, service := range tracker.services {
 					service.Trigger()
@@ -48,26 +54,27 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 			case <-tickerHeartbeat.C:
 				trackerLog.Debugln("tracker heartbeat checking")
 				var heartbeat *Heartbeat
-				if len(activities) == 0 {
+				if len(activityMap) == 0 {
 					logger.Debugf("no activity detected in the last %v seconds ...\n", int(timeToCheck))
 					heartbeat = &Heartbeat{
 						WasAnyActivity: false,
-						Activity:       nil,
+						ActivityMap:    nil,
 						Time:           time.Now(),
 					}
 				} else {
 					trackerLog.Debugf("activity detected in the last %v seconds ...\n", int(timeToCheck))
 					heartbeat = &Heartbeat{
 						WasAnyActivity: true,
-						Activity:       activities,
+						ActivityMap:    activityMap,
 						Time:           time.Now(),
 					}
 				}
 				heartbeatCh <- heartbeat
-				activities = makeActivityMap() //reset the activities map
+				activityMap = makeActivityMap() //reset the activityMap map
 				trackerLog.Debugln("**************** END OF CHECK ********************")
 			case activity := <-tracker.activityCh:
-				activities[activity] = time.Now()
+				timeNow := time.Now()
+				activityMap[activity] = append(activityMap[activity], timeNow)
 				trackerLog.Debugf("activity received: \n%#v\n", activity)
 			case <-tracker.quit:
 				trackerLog.Infof("stopping activity tracker\n")
@@ -101,8 +108,8 @@ func getAllServiceHandlers() []service.Instance {
 	}
 }
 
-func makeActivityMap() map[*activity.Type]time.Time {
-	activityMap := make(map[*activity.Type]time.Time)
+func makeActivityMap() map[*activity.Type][]time.Time {
+	activityMap := make(map[*activity.Type][]time.Time)
 	return activityMap
 }
 
