@@ -37,9 +37,8 @@ func main() {
 			} else {
 				logger.Infof("activity detected in the last %v seconds.", int(frequency))
 				logger.Infof("Activity type:\n")
-				for activity, times := range heartbeat.ActivityMap {
-					//logger.Infof("%v ---> %v\n", activity.ActivityType, time)
-					logger.Infof("activity : %v times: %v\n", activity, len(times))
+				for activityType, times := range heartbeat.ActivityMap {
+					logger.Infof("activityType : %v times: %v\n", activityType, len(times))
 				}
 				fmt.Printf("\n\n\n")
 			}
