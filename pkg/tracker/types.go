@@ -9,9 +9,10 @@ import (
 
 //Instance is an instance of the tracker
 type Instance struct {
-	Frequency  int
+	Frequency  int //the frequency at which you want the heartbeat (in seconds)
 	LogLevel   string
 	LogFormat  string
+	isTest     bool //only for testing purposes
 	activityCh chan *activity.Instance
 	quit       chan struct{}
 	handlers   map[activity.Type]handler.Instance

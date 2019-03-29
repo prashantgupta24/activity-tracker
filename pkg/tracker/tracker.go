@@ -12,6 +12,12 @@ import (
 
 const (
 	preHeartbeatTime = time.Millisecond * 100
+	//seconds
+	minValFrequency  = 10
+	maxValFrequency  = 300
+	defaultFrequency = 60
+
+	numWorkerFrequencyDivisions = 5
 )
 
 //StartWithHandlers starts the tracker with a set of handlers
@@ -31,15 +37,9 @@ func (tracker *Instance) StartWithHandlers(handlers ...handler.Instance) (heartb
 			"method": "activity-tracker",
 		})
 
-		timeToCheck := time.Duration(tracker.Frequency)
-		//tickers
-		tickerHeartbeat := time.NewTicker(timeToCheck * time.Second)
-		var tickerWorker *time.Ticker
-		if timeToCheck >= 10 {
-			tickerWorker = time.NewTicker((timeToCheck / 5 * time.Second) - preHeartbeatTime)
-		} else {
-			tickerWorker = time.NewTicker(timeToCheck*time.Second - preHeartbeatTime)
-		}
+		//instantiating tickers
+		frequency, tickerWorker := tracker.validateFrequency()
+		tickerHeartbeat := time.NewTicker(frequency * time.Second)
 
 		activityMap := makeActivityMap()
 
@@ -55,14 +55,14 @@ func (tracker *Instance) StartWithHandlers(handlers ...handler.Instance) (heartb
 				trackerLog.Debugln("tracker heartbeat checking")
 				var heartbeat *Heartbeat
 				if len(activityMap) == 0 {
-					logger.Debugf("no activity detected in the last %v seconds ...\n", int(timeToCheck))
+					logger.Debugf("no activity detected in the last %v seconds ...\n", int(frequency))
 					heartbeat = &Heartbeat{
 						WasAnyActivity: false,
 						ActivityMap:    nil,
 						Time:           time.Now(),
 					}
 				} else {
-					trackerLog.Debugf("activity detected in the last %v seconds ...\n", int(timeToCheck))
+					trackerLog.Debugf("activity detected in the last %v seconds ...\n", int(frequency))
 					heartbeat = &Heartbeat{
 						WasAnyActivity: true,
 						ActivityMap:    activityMap,
@@ -111,6 +111,22 @@ func getAllHandlers() []handler.Instance {
 func makeActivityMap() (activityMap map[activity.Type][]time.Time) {
 	activityMap = make(map[activity.Type][]time.Time)
 	return activityMap
+}
+
+func (tracker *Instance) validateFrequency() (frequency time.Duration, tickerWorker *time.Ticker) {
+	trackerFreq := tracker.Frequency
+	if tracker.isTest {
+		frequency = time.Duration(trackerFreq)
+		tickerWorker = time.NewTicker(frequency*time.Second - preHeartbeatTime)
+		return
+	}
+	if trackerFreq >= minValFrequency && trackerFreq <= maxValFrequency {
+		frequency = time.Duration(trackerFreq)
+	} else {
+		frequency = time.Duration(defaultFrequency)
+	}
+	tickerWorker = time.NewTicker(((frequency / numWorkerFrequencyDivisions) * time.Second) - preHeartbeatTime)
+	return
 }
 
 func (tracker *Instance) registerHandlers(logger *log.Logger, handlers ...handler.Instance) {

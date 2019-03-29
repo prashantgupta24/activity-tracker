@@ -32,10 +32,11 @@ func (suite *TestTracker) SetupSuite() {
 
 //Run once before each test
 func (suite *TestTracker) SetupTest() {
-	frequency := 1
+	frequency := 1 //second
 
 	suite.tracker = &Instance{
 		Frequency: frequency,
+		isTest:    true,
 	}
 }
 

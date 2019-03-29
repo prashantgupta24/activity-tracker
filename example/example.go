@@ -12,8 +12,6 @@ func main() {
 
 	logger := logging.New()
 
-	logger.Infof("starting activity tracker")
-
 	frequency := 12 //value always in seconds
 
 	activityTracker := &tracker.Instance{
@@ -28,6 +26,8 @@ func main() {
 	//heartbeatCh := activityTracker.StartWithHanders(handler.MouseClickHandler(), handler.MouseCursorHandler())
 
 	timeToKill := time.NewTicker(time.Second * 60)
+
+	logger.Infof("starting activity tracker with %v second frequency ...", frequency)
 
 	for {
 		select {
