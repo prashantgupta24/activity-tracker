@@ -21,11 +21,11 @@ func main() {
 		LogLevel:  logging.Info,
 	}
 
-	//This starts the tracker for all services
+	//This starts the tracker for all handlers
 	heartbeatCh := activityTracker.Start()
 
-	//if you only want to track certain services, you can use StartWithServices
-	//heartbeatCh := activityTracker.StartWithServices(service.MouseClickHandler(), service.MouseCursorHandler())
+	//if you only want to track certain handlers, you can use StartWithhandlers
+	//heartbeatCh := activityTracker.StartWithHanders(handler.MouseClickHandler(), handler.MouseCursorHandler())
 
 	timeToKill := time.NewTicker(time.Second * 60)
 

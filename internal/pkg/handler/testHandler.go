@@ -1,4 +1,4 @@
-package service
+package handler
 
 import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
@@ -14,7 +14,7 @@ type TestHandlerStruct struct {
 	tickerCh chan struct{}
 }
 
-//Start the service
+//Start the handler
 func (h *TestHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Instance) {
 	h.tickerCh = make(chan struct{})
 	go func() {
@@ -38,12 +38,12 @@ func (h *TestHandlerStruct) Type() activity.Type {
 	return testActivity
 }
 
-//Trigger the service
+//Trigger the handler
 func (h *TestHandlerStruct) Trigger() {
 	select {
 	case h.tickerCh <- struct{}{}:
 	default:
-		//service is blocked, handle it somehow?
+		//handler is blocked, handle it somehow?
 	}
 }
 

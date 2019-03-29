@@ -3,7 +3,7 @@ package tracker
 import (
 	"time"
 
-	"github.com/prashantgupta24/activity-tracker/internal/pkg/service"
+	"github.com/prashantgupta24/activity-tracker/internal/pkg/handler"
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 )
 
@@ -14,7 +14,7 @@ type Instance struct {
 	LogFormat  string
 	activityCh chan *activity.Instance
 	quit       chan struct{}
-	services   map[activity.Type]service.Instance
+	handlers   map[activity.Type]handler.Instance
 }
 
 /*Heartbeat is the data packet sent from the tracker to the user.

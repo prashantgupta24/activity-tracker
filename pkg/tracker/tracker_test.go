@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/prashantgupta24/activity-tracker/internal/pkg/service"
+	"github.com/prashantgupta24/activity-tracker/internal/pkg/handler"
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 
 	"github.com/stretchr/testify/assert"
@@ -39,29 +39,29 @@ func (suite *TestTracker) SetupTest() {
 	}
 }
 
-func (suite *TestTracker) TestDupServiceRegistration() {
+func (suite *TestTracker) TestDupHandlerRegistration() {
 	t := suite.T()
 	tracker := suite.tracker
 
-	tracker.StartWithServices(service.TestHandler(),
-		service.TestHandler())
+	tracker.StartWithHandlers(handler.TestHandler(),
+		handler.TestHandler())
 
-	assert.Equal(t, 1, len(tracker.services), "duplicate services should not be registered")
+	assert.Equal(t, 1, len(tracker.handlers), "duplicate handlers should not be registered")
 }
 
-func (suite *TestTracker) TestActivityServicesNumEqual() {
+func (suite *TestTracker) TestActivityHandlersNumEqual() {
 	t := suite.T()
 	numActivities := len(suite.activities)
-	numServices := len(getAllServiceHandlers())
+	numHandlers := len(getAllHandlers())
 
-	assert.Equal(t, numServices, numActivities, "tracker should have equal services and activities")
+	assert.Equal(t, numHandlers, numActivities, "tracker should have equal handlers and activities")
 }
 
 func (suite *TestTracker) TestActivitiesOneByOne() {
 	t := suite.T()
 	tracker := suite.tracker
 
-	heartbeatCh := tracker.StartWithServices()
+	heartbeatCh := tracker.StartWithHandlers()
 
 	//send one activity at a time, then wait for heartbeat to acknowledge it
 	for _, sentActivityType := range suite.activities {
@@ -85,7 +85,7 @@ func (suite *TestTracker) TestActivitiesAllAtOnce() {
 	t := suite.T()
 	tracker := suite.tracker
 
-	heartbeatCh := tracker.StartWithServices()
+	heartbeatCh := tracker.StartWithHandlers()
 
 	//send all activities
 	for _, sentActivityType := range suite.activities {
@@ -109,7 +109,7 @@ func (suite *TestTracker) TestMultipleActivities() {
 	t := suite.T()
 	tracker := suite.tracker
 
-	heartbeatCh := tracker.StartWithServices()
+	heartbeatCh := tracker.StartWithHandlers()
 
 	timesToSend := 2
 	//send all activities timesToSend times
@@ -134,11 +134,11 @@ func (suite *TestTracker) TestMultipleActivities() {
 		}
 	}
 }
-func (suite *TestTracker) TestServiceTestHandler() {
+func (suite *TestTracker) TestHandlerTestHandler() {
 	t := suite.T()
 	tracker := suite.tracker
 
-	heartbeatCh := tracker.StartWithServices(service.TestHandler())
+	heartbeatCh := tracker.StartWithHandlers(handler.TestHandler())
 
 	select {
 	case heartbeat := <-heartbeatCh:
@@ -155,10 +155,10 @@ func (suite *TestTracker) TestTrackerStartAndQuit() {
 	t := suite.T()
 	tracker := suite.tracker
 
-	numServices := len(getAllServiceHandlers())
+	numHandlers := len(getAllHandlers())
 	heartbeatCh := tracker.Start()
 
-	assert.Equal(t, numServices, len(tracker.services), "tracker should have started with %v services by default", numServices)
+	assert.Equal(t, numHandlers, len(tracker.handlers), "tracker should have started with %v handlers by default", numHandlers)
 
 	//close
 	var wg sync.WaitGroup

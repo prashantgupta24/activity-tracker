@@ -1,4 +1,4 @@
-package service
+package handler
 
 import (
 	log "github.com/sirupsen/logrus"
@@ -16,7 +16,7 @@ type MouseClickHandlerStruct struct {
 	tickerCh chan struct{}
 }
 
-//Start the service
+//Start the handler
 func (m *MouseClickHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Instance) {
 	m.tickerCh = make(chan struct{})
 	registrationFree := make(chan struct{})
@@ -51,13 +51,13 @@ func MouseClickHandler() *MouseClickHandlerStruct {
 	return &MouseClickHandlerStruct{}
 }
 
-//Trigger the service
+//Trigger the handler
 func (m *MouseClickHandlerStruct) Trigger() {
 	//doing it the non-blocking sender way
 	select {
 	case m.tickerCh <- struct{}{}:
 	default:
-		//service is blocked, handle it somehow?
+		//handler is blocked, handle it somehow?
 	}
 }
 

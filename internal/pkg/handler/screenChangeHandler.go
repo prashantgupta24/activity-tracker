@@ -1,4 +1,4 @@
-package service
+package handler
 
 import (
 	"time"
@@ -23,7 +23,7 @@ type screenInfo struct {
 	currentPixelColor string
 }
 
-//Start the service
+//Start the handler
 func (s *ScreenChangeHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Instance) {
 
 	s.tickerCh = make(chan struct{})
@@ -63,13 +63,13 @@ func ScreenChangeHandler() *ScreenChangeHandlerStruct {
 	return &ScreenChangeHandlerStruct{}
 }
 
-//Trigger the service
+//Trigger the handler
 func (s *ScreenChangeHandlerStruct) Trigger() {
 	//doing it the non-blocking sender way
 	select {
 	case s.tickerCh <- struct{}{}:
 	default:
-		//service is blocked, handle it somehow?
+		//handler is blocked, handle it somehow?
 	}
 }
 

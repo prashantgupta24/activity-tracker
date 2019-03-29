@@ -1,4 +1,4 @@
-package service
+package handler
 
 import (
 	"time"
@@ -23,7 +23,7 @@ type cursorInfo struct {
 	currentMousePos *mouse.Position
 }
 
-//Start the service
+//Start the handler
 func (m *MouseCursorHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Instance) {
 
 	m.tickerCh = make(chan struct{})
@@ -60,13 +60,13 @@ func MouseCursorHandler() *MouseCursorHandlerStruct {
 	return &MouseCursorHandlerStruct{}
 }
 
-//Trigger the service
+//Trigger the handler
 func (m *MouseCursorHandlerStruct) Trigger() {
 	//doing it the non-blocking sender way
 	select {
 	case m.tickerCh <- struct{}{}:
 	default:
-		//service is blocked, handle it somehow?
+		//handler is blocked, handle it somehow?
 	}
 }
 
