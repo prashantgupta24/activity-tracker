@@ -61,11 +61,9 @@ func (m *MouseClickHandlerStruct) Trigger() {
 	}
 }
 
-//Type return the type of handler
-func (m *MouseClickHandlerStruct) Type() activity.Instance {
-	return activity.Instance{
-		Type: mouseClickActivity,
-	}
+//Type returns the type of handler
+func (m *MouseClickHandlerStruct) Type() activity.Type {
+	return mouseClickActivity
 }
 
 //Close closes the handler

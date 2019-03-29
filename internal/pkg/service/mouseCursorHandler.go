@@ -24,7 +24,7 @@ type cursorInfo struct {
 }
 
 //Start the service
-func (m *MouseCursorHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Type) {
+func (m *MouseCursorHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Instance) {
 
 	m.tickerCh = make(chan struct{})
 
@@ -40,8 +40,8 @@ func (m *MouseCursorHandlerStruct) Start(logger *log.Logger, activityCh chan *ac
 			select {
 			case cursorInfo := <-commCh:
 				if cursorInfo.didCursorMove {
-					activityCh <- &activity.Type{
-						ActivityType: mouseMoveActivity,
+					activityCh <- &activity.Instance{
+						Type: mouseMoveActivity,
 					}
 					lastMousePos = cursorInfo.currentMousePos
 				}
@@ -70,11 +70,9 @@ func (m *MouseCursorHandlerStruct) Trigger() {
 	}
 }
 
-//Type return the type of handler
+//Type returns the type of handler
 func (m *MouseCursorHandlerStruct) Type() activity.Type {
-	return activity.Type{
-		ActivityType: mouseMoveActivity,
-	}
+	return mouseMoveActivity
 }
 
 //Close closes the handler

@@ -74,7 +74,7 @@ func (tracker *Instance) StartWithServices(services ...service.Instance) (heartb
 				trackerLog.Debugln("**************** END OF CHECK ********************")
 			case activity := <-tracker.activityCh:
 				timeNow := time.Now()
-				activityMap[activity] = append(activityMap[activity], timeNow)
+				activityMap[activity.Type] = append(activityMap[activity.Type], timeNow)
 				trackerLog.Debugf("activity received: \n%#v\n", activity)
 			case <-tracker.quit:
 				trackerLog.Infof("stopping activity tracker\n")
@@ -108,15 +108,15 @@ func getAllServiceHandlers() []service.Instance {
 	}
 }
 
-func makeActivityMap() map[*activity.Type][]time.Time {
-	activityMap := make(map[*activity.Type][]time.Time)
+func makeActivityMap() (activityMap map[activity.Type][]time.Time) {
+	activityMap = make(map[activity.Type][]time.Time)
 	return activityMap
 }
 
 func (tracker *Instance) registerHandlers(logger *log.Logger, services ...service.Instance) {
 
 	tracker.services = make(map[activity.Type]service.Instance)
-	tracker.activityCh = make(chan *activity.Type, len(services)) // number based on types of activities being tracked
+	tracker.activityCh = make(chan *activity.Instance, len(services)) // number based on types of activities being tracked
 
 	for _, service := range services {
 		if _, ok := tracker.services[service.Type()]; !ok { //duplicate registration prevention

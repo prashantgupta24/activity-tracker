@@ -15,12 +15,12 @@ type TestHandlerStruct struct {
 }
 
 //Start the service
-func (h *TestHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Type) {
+func (h *TestHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Instance) {
 	h.tickerCh = make(chan struct{})
 	go func() {
 		for range h.tickerCh {
-			activityCh <- &activity.Type{
-				ActivityType: testActivity,
+			activityCh <- &activity.Instance{
+				Type: testActivity,
 			}
 		}
 		logger.Infof("stopping test handler")
@@ -33,11 +33,9 @@ func TestHandler() *TestHandlerStruct {
 	return &TestHandlerStruct{}
 }
 
-//Type return the type of handler
+//Type returns the type of handler
 func (h *TestHandlerStruct) Type() activity.Type {
-	return activity.Type{
-		ActivityType: testActivity,
-	}
+	return testActivity
 }
 
 //Trigger the service

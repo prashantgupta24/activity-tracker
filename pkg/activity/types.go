@@ -1,6 +1,7 @@
 package activity
 
-type activityType string
+//Type of activity as defined below
+type Type string
 
 /*
 MouseCursorMovement
@@ -11,13 +12,13 @@ TestActivity
 These are the types of activities the tracker currently supports
 */
 const (
-	MouseCursorMovement activityType = "cursor-move"
-	MouseClick          activityType = "mouse-click"
-	ScreenChange        activityType = "screen-change"
-	TestActivity        activityType = "test-activity"
+	MouseCursorMovement Type = "cursor-move"
+	MouseClick          Type = "mouse-click"
+	ScreenChange        Type = "screen-change"
+	TestActivity        Type = "test-activity"
 )
 
 //Instance is an instance of Activity
 type Instance struct {
-	Type activityType
+	Type Type
 }

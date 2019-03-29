@@ -24,7 +24,7 @@ type screenInfo struct {
 }
 
 //Start the service
-func (s *ScreenChangeHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Type) {
+func (s *ScreenChangeHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Instance) {
 
 	s.tickerCh = make(chan struct{})
 
@@ -43,8 +43,8 @@ func (s *ScreenChangeHandlerStruct) Start(logger *log.Logger, activityCh chan *a
 			select {
 			case screenInfo := <-commCh:
 				if screenInfo.didScreenChange {
-					activityCh <- &activity.Type{
-						ActivityType: screenChangeActivity,
+					activityCh <- &activity.Instance{
+						Type: screenChangeActivity,
 					}
 					lastPixelColor = screenInfo.currentPixelColor
 				}
@@ -73,11 +73,9 @@ func (s *ScreenChangeHandlerStruct) Trigger() {
 	}
 }
 
-//Type return the type of handler
+//Type returns the type of handler
 func (s *ScreenChangeHandlerStruct) Type() activity.Type {
-	return activity.Type{
-		ActivityType: screenChangeActivity,
-	}
+	return screenChangeActivity
 }
 
 //Close closes the handler

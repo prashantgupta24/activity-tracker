@@ -11,7 +11,7 @@ const (
 
 //Instance is the main interface for a service for the tracker
 type Instance interface {
-	Start(*log.Logger, chan *activity.Type)
+	Start(*log.Logger, chan *activity.Instance)
 	Type() activity.Type
 	Trigger()
 	Close()

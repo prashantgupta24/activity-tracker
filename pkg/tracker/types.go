@@ -12,14 +12,11 @@ type Instance struct {
 	Frequency  int
 	LogLevel   string
 	LogFormat  string
-	activityCh chan *activity.Type
+	activityCh chan *activity.Instance
 	quit       chan struct{}
 	services   map[activity.Type]service.Instance
 }
 
-<<<<<<< Updated upstream
-//Heartbeat is the data packet sent from the tracker to the user
-=======
 /*Heartbeat is the data packet sent from the tracker to the user.
 
 WasAnyActivity tells if there was any activity within that time frame
@@ -29,9 +26,8 @@ it was and at what times it occured.
 The Time field is the time of the Heartbeat sent (not to be confused with
 the activity time, which is the time the activity occured within the time frame)
 */
->>>>>>> Stashed changes
 type Heartbeat struct {
 	WasAnyActivity bool
-	ActivityMap    map[*activity.Type][]time.Time //activity type with its times
-	Time           time.Time                      //heartbeat time
+	ActivityMap    map[activity.Type][]time.Time //activity type with its times
+	Time           time.Time                     //heartbeat time
 }
