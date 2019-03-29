@@ -1,11 +1,12 @@
 package tracker
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/prashantgupta24/activity-tracker/internal/pkg/service"
+	"github.com/prashantgupta24/activity-tracker/internal/pkg/handler"
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 
 	"github.com/stretchr/testify/assert"
@@ -14,7 +15,7 @@ import (
 
 type TestTracker struct {
 	suite.Suite
-	activities []*activity.Type
+	activities []activity.Type
 	tracker    *Instance
 }
 
@@ -24,16 +25,9 @@ func TestSuite(t *testing.T) {
 
 //Run once before all tests
 func (suite *TestTracker) SetupSuite() {
-
-	suite.activities = append(suite.activities, &activity.Type{
-		ActivityType: activity.MouseClick,
-	})
-	suite.activities = append(suite.activities, &activity.Type{
-		ActivityType: activity.MouseCursorMovement,
-	})
-	suite.activities = append(suite.activities, &activity.Type{
-		ActivityType: activity.ScreenChange,
-	})
+	suite.activities = append(suite.activities, activity.MouseClick)
+	suite.activities = append(suite.activities, activity.MouseCursorMovement)
+	suite.activities = append(suite.activities, activity.ScreenChange)
 }
 
 //Run once before each test
@@ -45,41 +39,42 @@ func (suite *TestTracker) SetupTest() {
 	}
 }
 
-func (suite *TestTracker) TestDupServiceRegistration() {
+func (suite *TestTracker) TestDupHandlerRegistration() {
 	t := suite.T()
 	tracker := suite.tracker
 
-	tracker.StartWithServices(service.TestHandler(),
-		service.TestHandler())
+	tracker.StartWithHandlers(handler.TestHandler(),
+		handler.TestHandler())
 
-	assert.Equal(t, 1, len(tracker.services), "duplicate services should not be registered")
+	assert.Equal(t, 1, len(tracker.handlers), "duplicate handlers should not be registered")
 }
 
-func (suite *TestTracker) TestActivityServicesNumEqual() {
+func (suite *TestTracker) TestActivityHandlersNumEqual() {
 	t := suite.T()
 	numActivities := len(suite.activities)
-	numServices := len(getAllServiceHandlers())
+	numHandlers := len(getAllHandlers())
 
-	assert.Equal(t, numServices, numActivities, "tracker should have equal services and activities")
+	assert.Equal(t, numHandlers, numActivities, "tracker should have equal handlers and activities")
 }
 
 func (suite *TestTracker) TestActivitiesOneByOne() {
 	t := suite.T()
 	tracker := suite.tracker
 
-	heartbeatCh := tracker.StartWithServices()
+	heartbeatCh := tracker.StartWithHandlers()
 
 	//send one activity at a time, then wait for heartbeat to acknowledge it
-	for _, sentActivity := range suite.activities {
-		//fmt.Printf("sending %v activity to tracker\n", sentActivity.ActivityType)
-		tracker.activityCh <- sentActivity
+	for _, sentActivityType := range suite.activities {
+		tracker.activityCh <- &activity.Instance{
+			Type: sentActivityType,
+		}
 		select {
 		case heartbeat := <-heartbeatCh:
 			assert.NotNil(t, heartbeat)
 			assert.True(t, heartbeat.WasAnyActivity, "there should have been activity")
 
-			for activity, time := range heartbeat.Activity {
-				assert.Equal(t, sentActivity, activity, "should be of %v activity type", sentActivity)
+			for activityType, time := range heartbeat.ActivityMap {
+				assert.Equal(t, sentActivityType, activityType, "should be of %v activity type", sentActivityType)
 				assert.NotNil(t, time, "time of activity should not be nil")
 			}
 		}
@@ -90,39 +85,67 @@ func (suite *TestTracker) TestActivitiesAllAtOnce() {
 	t := suite.T()
 	tracker := suite.tracker
 
-	heartbeatCh := tracker.StartWithServices()
+	heartbeatCh := tracker.StartWithHandlers()
 
 	//send all activities
-	for _, sentActivity := range suite.activities {
-		tracker.activityCh <- sentActivity
+	for _, sentActivityType := range suite.activities {
+		tracker.activityCh <- &activity.Instance{
+			Type: sentActivityType,
+		}
 	}
 	select {
 	case heartbeat := <-heartbeatCh:
 		assert.NotNil(t, heartbeat)
 		assert.True(t, heartbeat.WasAnyActivity, "there should have been activity")
-		assert.Equal(t, len(suite.activities), len(heartbeat.Activity), "tracker should registered %v activities ", len(suite.activities))
-		for activity, time := range heartbeat.Activity {
-			assert.Contains(t, suite.activities, activity, "should contain %v activity type", activity.ActivityType)
+		assert.Equal(t, len(suite.activities), len(heartbeat.ActivityMap), "tracker should registered %v activities ", len(suite.activities))
+		for activityType, time := range heartbeat.ActivityMap {
+			assert.Contains(t, suite.activities, activityType, "should contain %v activity type", activityType)
 			assert.NotNil(t, time, "time of activity should not be nil")
 		}
 	}
 }
 
-func (suite *TestTracker) TestServiceTestHandler() {
+func (suite *TestTracker) TestMultipleActivities() {
 	t := suite.T()
 	tracker := suite.tracker
 
-	heartbeatCh := tracker.StartWithServices(service.TestHandler())
+	heartbeatCh := tracker.StartWithHandlers()
+
+	timesToSend := 2
+	//send all activities timesToSend times
+	for i := 0; i < timesToSend; i++ {
+		for _, sentActivityType := range suite.activities {
+			tracker.activityCh <- &activity.Instance{
+				Type: sentActivityType,
+			}
+		}
+	}
 
 	select {
 	case heartbeat := <-heartbeatCh:
 		assert.NotNil(t, heartbeat)
 		assert.True(t, heartbeat.WasAnyActivity, "there should have been activity")
-		testActivity := &activity.Type{
-			ActivityType: activity.TestActivity,
+		assert.Equal(t, len(suite.activities), len(heartbeat.ActivityMap), "tracker should have registered %v activities ", len(suite.activities))
+		for activityType, time := range heartbeat.ActivityMap {
+			fmt.Printf("activityType : %v times: %v\n", activityType, time)
+			assert.Contains(t, suite.activities, activityType, "should contain %v activityType", activityType)
+			assert.NotNil(t, time, "time of activity should not be nil")
+			assert.Equal(t, timesToSend, len(time), "activity should be recorded %v times", timesToSend)
 		}
-		for activity, time := range heartbeat.Activity {
-			assert.Equal(t, activity, testActivity, "should be of test activity type")
+	}
+}
+func (suite *TestTracker) TestHandlerTestHandler() {
+	t := suite.T()
+	tracker := suite.tracker
+
+	heartbeatCh := tracker.StartWithHandlers(handler.TestHandler())
+
+	select {
+	case heartbeat := <-heartbeatCh:
+		assert.NotNil(t, heartbeat)
+		assert.True(t, heartbeat.WasAnyActivity, "there should have been activity")
+		for activityType, time := range heartbeat.ActivityMap {
+			assert.Equal(t, activity.TestActivity, activityType, "should be of test activity type")
 			assert.NotNil(t, time, "time of activity should not be nil")
 		}
 	}
@@ -132,10 +155,10 @@ func (suite *TestTracker) TestTrackerStartAndQuit() {
 	t := suite.T()
 	tracker := suite.tracker
 
-	numServices := len(getAllServiceHandlers())
+	numHandlers := len(getAllHandlers())
 	heartbeatCh := tracker.Start()
 
-	assert.Equal(t, numServices, len(tracker.services), "tracker should have started with %v services by default", numServices)
+	assert.Equal(t, numHandlers, len(tracker.handlers), "tracker should have started with %v handlers by default", numHandlers)
 
 	//close
 	var wg sync.WaitGroup

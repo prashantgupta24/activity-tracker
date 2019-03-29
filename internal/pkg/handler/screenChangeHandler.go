@@ -1,4 +1,4 @@
-package service
+package handler
 
 import (
 	"time"
@@ -23,8 +23,8 @@ type screenInfo struct {
 	currentPixelColor string
 }
 
-//Start the service
-func (s *ScreenChangeHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Type) {
+//Start the handler
+func (s *ScreenChangeHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Instance) {
 
 	s.tickerCh = make(chan struct{})
 
@@ -43,8 +43,8 @@ func (s *ScreenChangeHandlerStruct) Start(logger *log.Logger, activityCh chan *a
 			select {
 			case screenInfo := <-commCh:
 				if screenInfo.didScreenChange {
-					activityCh <- &activity.Type{
-						ActivityType: screenChangeActivity,
+					activityCh <- &activity.Instance{
+						Type: screenChangeActivity,
 					}
 					lastPixelColor = screenInfo.currentPixelColor
 				}
@@ -63,21 +63,19 @@ func ScreenChangeHandler() *ScreenChangeHandlerStruct {
 	return &ScreenChangeHandlerStruct{}
 }
 
-//Trigger the service
+//Trigger the handler
 func (s *ScreenChangeHandlerStruct) Trigger() {
 	//doing it the non-blocking sender way
 	select {
 	case s.tickerCh <- struct{}{}:
 	default:
-		//service is blocked, handle it somehow?
+		//handler is blocked, handle it somehow?
 	}
 }
 
-//Type return the type of handler
+//Type returns the type of handler
 func (s *ScreenChangeHandlerStruct) Type() activity.Type {
-	return activity.Type{
-		ActivityType: screenChangeActivity,
-	}
+	return screenChangeActivity
 }
 
 //Close closes the handler
