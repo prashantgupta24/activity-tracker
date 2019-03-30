@@ -12,11 +12,11 @@ func main() {
 
 	logger := logging.New()
 
-	frequency := 12 //value always in seconds
+	frequency := 60 //value always in seconds
 
 	activityTracker := &tracker.Instance{
 		Frequency: frequency,
-		LogLevel:  logging.Info,
+		LogLevel:  logging.Debug,
 	}
 
 	//This starts the tracker for all handlers

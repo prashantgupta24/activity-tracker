@@ -43,11 +43,17 @@ func (suite *TestTracker) TestTrackerValidateFrequency() {
 	t := suite.T()
 
 	var tracker *Instance
+
+	//testing with empty
+	tracker = &Instance{}
+	frequency, _ := tracker.validateFrequency()
+	assert.Equal(t, time.Duration(defaultFrequency), frequency, "tracker should get default frequency")
+
 	//testing with 0
 	tracker = &Instance{
 		Frequency: 0,
 	}
-	frequency, _ := tracker.validateFrequency()
+	frequency, _ = tracker.validateFrequency()
 	assert.Equal(t, time.Duration(defaultFrequency), frequency, "tracker should get default frequency")
 
 	//testing with -1
