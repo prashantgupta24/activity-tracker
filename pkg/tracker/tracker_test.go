@@ -77,7 +77,7 @@ func (suite *TestTracker) TestTrackerValidateFrequency() {
 		isTest:    false,
 	}
 	frequency, _ = tracker.validateFrequency()
-	assert.Equal(t, time.Duration(defaultFrequency), frequency, "tracker should get default frequency retain original frequency since it is a test")
+	assert.Equal(t, time.Duration(defaultFrequency), frequency, "tracker should get default frequency")
 
 	//testing with test instance = true
 	tracker = &Instance{
