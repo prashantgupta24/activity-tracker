@@ -40,6 +40,54 @@ func (suite *TestTracker) SetupTest() {
 	}
 }
 
+func (suite *TestTracker) TestTrackerValidateFrequency() {
+	t := suite.T()
+
+	var tracker *Instance
+	//testing with 0
+	tracker = &Instance{
+		Frequency: 0,
+	}
+	frequency, _ := tracker.validateFrequency()
+	assert.Equal(t, time.Duration(defaultFrequency), frequency, "tracker should get default frequency")
+
+	//testing with -1
+	tracker = &Instance{
+		Frequency: -1,
+	}
+	frequency, _ = tracker.validateFrequency()
+	assert.Equal(t, time.Duration(defaultFrequency), frequency, "tracker should get default frequency")
+
+	//testing with min
+	tracker = &Instance{
+		Frequency: minValFrequency,
+	}
+	frequency, _ = tracker.validateFrequency()
+	assert.Equal(t, time.Duration(minValFrequency), frequency, "tracker should retain original frequency")
+
+	//testing with max
+	tracker = &Instance{
+		Frequency: maxValFrequency,
+	}
+	frequency, _ = tracker.validateFrequency()
+	assert.Equal(t, time.Duration(maxValFrequency), frequency, "tracker should retain original frequency")
+
+	//testing with test instance = false
+	tracker = &Instance{
+		Frequency: 1,
+		isTest:    false,
+	}
+	frequency, _ = tracker.validateFrequency()
+	assert.Equal(t, time.Duration(defaultFrequency), frequency, "tracker should get default frequency retain original frequency since it is a test")
+
+	//testing with test instance = true
+	tracker = &Instance{
+		Frequency: 1,
+		isTest:    true,
+	}
+	frequency, _ = tracker.validateFrequency()
+	assert.Equal(t, time.Duration(1), frequency, "tracker should retain original frequency since it is a test")
+}
 func (suite *TestTracker) TestDupHandlerRegistration() {
 	t := suite.T()
 	tracker := suite.tracker
@@ -135,7 +183,7 @@ func (suite *TestTracker) TestMultipleActivities() {
 		}
 	}
 }
-func (suite *TestTracker) TestHandlerTestHandler() {
+func (suite *TestTracker) TestTestHandler() {
 	t := suite.T()
 	tracker := suite.tracker
 

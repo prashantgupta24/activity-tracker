@@ -46,7 +46,7 @@ func (tracker *Instance) StartWithHandlers(handlers ...handler.Instance) (heartb
 		for {
 			select {
 			case <-tickerWorker.C:
-				trackerLog.Infof("tracker worker working")
+				trackerLog.Debugln("tracker worker working")
 				//time to trigger all registered handlers
 				for _, handler := range tracker.handlers {
 					handler.Trigger()
