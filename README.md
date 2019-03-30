@@ -29,11 +29,17 @@ It is a libary that lets you monitor certain activities on your machine, and sen
 
 	select {
 	case heartbeat := <-heartbeatCh:
+	
 		if !heartbeat.WasAnyActivity {
-			logger.Infof("no activity detected in the last %v seconds\n\n\n", int(heartbeatFrequency))
+		
+			logger.Infof("no activity detected in the last %v seconds", int(heartbeatFrequency))
+			
 		} else {
+		
 			logger.Infof("activity detected in the last %v seconds.", int(heartbeatFrequency))
+			
 			logger.Infof("Activity type:\n")
+			
 			for activityType, times := range heartbeat.ActivityMap {
 				logger.Infof("activityType : %v times: %v\n", activityType, len(times))
 			}
