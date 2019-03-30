@@ -13,7 +13,7 @@ import (
 const (
 	preHeartbeatTime = time.Millisecond * 100
 	//seconds
-	minValFrequency  = 10
+	minValFrequency  = 60
 	maxValFrequency  = 300
 	defaultFrequency = 60
 
