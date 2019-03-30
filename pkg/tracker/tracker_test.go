@@ -1,7 +1,6 @@
 package tracker
 
 import (
-	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -32,13 +31,80 @@ func (suite *TestTracker) SetupSuite() {
 
 //Run once before each test
 func (suite *TestTracker) SetupTest() {
-	frequency := 1
+	heartbeatFrequency := 1 //second
 
 	suite.tracker = &Instance{
-		Frequency: frequency,
+		HeartbeatFrequency: heartbeatFrequency,
+		isTest:             true,
+		//LogLevel:           "debug",
 	}
 }
 
+func (suite *TestTracker) TestTrackerValidateFrequency() {
+	t := suite.T()
+
+	var tracker *Instance
+
+	//testing with empty
+	tracker = &Instance{}
+	heartbeatFrequency, workerFrequency := tracker.validateFrequencies()
+	assert.Equal(t, time.Duration(defaultHFrequency), heartbeatFrequency, "tracker should get default frequency")
+	assert.Equal(t, time.Duration(defaultWFrequency), workerFrequency, "tracker should get default frequency")
+
+	//testing with 0
+	tracker = &Instance{
+		HeartbeatFrequency: 0,
+		WorkerFrequency:    0,
+	}
+	heartbeatFrequency, workerFrequency = tracker.validateFrequencies()
+	assert.Equal(t, time.Duration(defaultHFrequency), heartbeatFrequency, "tracker should get default frequency")
+	assert.Equal(t, time.Duration(defaultWFrequency), workerFrequency, "tracker should get default frequency")
+
+	//testing with -1
+	tracker = &Instance{
+		HeartbeatFrequency: -1,
+		WorkerFrequency:    -1,
+	}
+	heartbeatFrequency, workerFrequency = tracker.validateFrequencies()
+	assert.Equal(t, time.Duration(defaultHFrequency), heartbeatFrequency, "tracker should get default frequency")
+	assert.Equal(t, time.Duration(defaultWFrequency), workerFrequency, "tracker should get default frequency")
+
+	//testing with min
+	tracker = &Instance{
+		HeartbeatFrequency: minHFrequency,
+		WorkerFrequency:    minWFrequency,
+	}
+	heartbeatFrequency, workerFrequency = tracker.validateFrequencies()
+	assert.Equal(t, time.Duration(minHFrequency), heartbeatFrequency, "tracker should retain original frequency")
+	assert.Equal(t, time.Duration(minWFrequency), workerFrequency, "tracker should retain original frequency")
+
+	//testing with max
+	tracker = &Instance{
+		HeartbeatFrequency: maxHFrequency,
+		WorkerFrequency:    maxWFrequency,
+	}
+	heartbeatFrequency, workerFrequency = tracker.validateFrequencies()
+	assert.Equal(t, time.Duration(maxHFrequency), heartbeatFrequency, "tracker should retain original frequency")
+	assert.Equal(t, time.Duration(maxWFrequency), workerFrequency, "tracker should retain original frequency")
+
+	//testing with test instance = false
+	tracker = &Instance{
+		HeartbeatFrequency: 1,
+		isTest:             false,
+	}
+	heartbeatFrequency, workerFrequency = tracker.validateFrequencies()
+	assert.Equal(t, time.Duration(defaultHFrequency), heartbeatFrequency, "tracker should get default frequency")
+	assert.Equal(t, time.Duration(defaultWFrequency), workerFrequency, "tracker should get default frequency")
+
+	//testing with test instance = true
+	tracker = &Instance{
+		HeartbeatFrequency: 1,
+		isTest:             true,
+	}
+	heartbeatFrequency, workerFrequency = tracker.validateFrequencies()
+	assert.Equal(t, time.Duration(1), heartbeatFrequency, "tracker should retain original frequency since it is a test")
+	assert.Equal(t, heartbeatFrequency, workerFrequency, "worker should match heartbeat since it is a test")
+}
 func (suite *TestTracker) TestDupHandlerRegistration() {
 	t := suite.T()
 	tracker := suite.tracker
@@ -127,14 +193,14 @@ func (suite *TestTracker) TestMultipleActivities() {
 		assert.True(t, heartbeat.WasAnyActivity, "there should have been activity")
 		assert.Equal(t, len(suite.activities), len(heartbeat.ActivityMap), "tracker should have registered %v activities ", len(suite.activities))
 		for activityType, time := range heartbeat.ActivityMap {
-			fmt.Printf("activityType : %v times: %v\n", activityType, time)
+			//fmt.Printf("activityType : %v times: %v\n", activityType, time)
 			assert.Contains(t, suite.activities, activityType, "should contain %v activityType", activityType)
 			assert.NotNil(t, time, "time of activity should not be nil")
 			assert.Equal(t, timesToSend, len(time), "activity should be recorded %v times", timesToSend)
 		}
 	}
 }
-func (suite *TestTracker) TestHandlerTestHandler() {
+func (suite *TestTracker) TestTestHandler() {
 	t := suite.T()
 	tracker := suite.tracker
 
