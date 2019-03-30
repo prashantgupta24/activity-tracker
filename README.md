@@ -20,7 +20,8 @@ It is a libary that lets you monitor certain activities on your machine, and sen
 		LogLevel:           logging.Debug,
 	}
 
-	//This starts the tracker for all handlers
+	//This starts the tracker for all handlers. It gives you a channel 
+	//which you can listen to for heartbeat objects
 	heartbeatCh := activityTracker.Start()
 
 	//if you only want to track certain handlers, you can use StartWithhandlers
@@ -75,16 +76,20 @@ There are 2 primary configs required for the tracker to work:
 > The frequency at which you want the checks to happen within a heartbeat (default 60s).
 
 
-The activity tracker gives you a `heartbeat` object every 60 seconds, that is based on the `HeartbeatFrequency `. but there is something else to understand here. In order for the tracker to know how many times an activity occured, or how many times you moved the cursor for example, it needs to query the mouse movement library `n` number of times. That's where the `WorkerFrequency` comes into play.
+The activity tracker gives you a `heartbeat` object every 60 seconds, that is based on the `HeartbeatFrequency`. But there is something else to understand here. In order for the tracker to know how many times an activity occured, or how many times you moved the cursor for example, it needs to query the mouse movement library `n` number of times. That's where the `WorkerFrequency` comes into play.
 
-The `WorkerFrequency` tells the tracker how many times to query for each of the handlers in the tracker within a heartbeat. If you are just concerned whether any activity happened within a heartbeat or not, you can set it to the same as `HeartbeatFrequency`. 
+The `WorkerFrequency` tells the tracker how many times to query each of the handlers in the tracker within a heartbeat. Let's say you want to know how many times the mouse cursor was moved. What you want to do is to start the tracker with the usual 60s `HeartbeatFrequency `, configured with a `Mouse-cursor` handler. In this case, you set the `WorkerFrequency` to 5 seconds. It will then keep checking the mouse coordinates every 5 seconds to see if there was a movement, and track each time there was a change. At the end of `HeartbeatFrequency`, it will track all the changes and send it in the `heatbeat` object.
 
-If you want to know how many times an activity occured within a heartbeat, you might want to set the `WorkerFrequency` to a low value, so that it keeps quering the handlers.
+> If you are just concerned whether any activity happened within a heartbeat or not, you can set `WorkerFrequency` the same as `HeartbeatFrequency`. 
+
+>If you want to know how many times an activity occured within a heartbeat, you might want to set the `WorkerFrequency` to a low value, so that it keeps quering the handlers.
 
 
-## Another example
+##### Note: If the `WorkerFrequency` and the `HeartbeatFrequency` are set the same, then the `WorkerFrequency` always is started a fraction of a second before the `HeartbeatFrequency` kicks in. This is done so that when the `heartbeat` is going to be generated at the end of `HeartbeatFrequency`, the worker should have done its job of querying each of the handlers before that. 
 
-Suppose you want to track Activities A, B and C on your machine, and you want a heartbeat every 5 minutes. What it would do then is to send you heartbeats every 5 minutes, and each heartbeat would contain whether any of A, B or C occured within those 5 minutes, and if so, at what times.
+## Usecase
+
+Suppose you want to track Activities A, B and C on your machine, and you want a heartbeat every 5 minutes. What you want is for the tracker to send you heartbeats every 5 minutes, and each heartbeat would contain whether any of A, B or C occured within those 5 minutes, and if so, at what times.
 
 As another example, let's say you want to monitor whether there was any mouse click on your machine and you want to be monitor every 5 minutes. What you do is start the `Activity Tracker` with just the `mouse click` handler and `heartbeat` frequency set to 5 minutes. The `Start` function of the library gives you a channel which receives a `heartbeat` every 5 minutes, and it has details on whether there was a `click` in those 5 minutes, and if yes, the times the click happened.
 

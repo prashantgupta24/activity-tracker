@@ -21,7 +21,8 @@ func main() {
 		LogLevel:           logging.Info,
 	}
 
-	//This starts the tracker for all handlers
+	//This starts the tracker for all handlers. It gives you a channel
+	//which you can listen to for heartbeat objects
 	heartbeatCh := activityTracker.Start()
 
 	//if you only want to track certain handlers, you can use StartWithhandlers
