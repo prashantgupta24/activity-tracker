@@ -1,7 +1,6 @@
 package tracker
 
 import (
-	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -176,7 +175,7 @@ func (suite *TestTracker) TestMultipleActivities() {
 		assert.True(t, heartbeat.WasAnyActivity, "there should have been activity")
 		assert.Equal(t, len(suite.activities), len(heartbeat.ActivityMap), "tracker should have registered %v activities ", len(suite.activities))
 		for activityType, time := range heartbeat.ActivityMap {
-			fmt.Printf("activityType : %v times: %v\n", activityType, time)
+			//fmt.Printf("activityType : %v times: %v\n", activityType, time)
 			assert.Contains(t, suite.activities, activityType, "should contain %v activityType", activityType)
 			assert.NotNil(t, time, "time of activity should not be nil")
 			assert.Equal(t, timesToSend, len(time), "activity should be recorded %v times", timesToSend)
