@@ -12,11 +12,13 @@ func main() {
 
 	logger := logging.New()
 
-	frequency := 60 //value always in seconds
+	heartbeatFrequency := 60 //value always in seconds
+	workerFrequency := 5     //seconds
 
 	activityTracker := &tracker.Instance{
-		Frequency: frequency,
-		LogLevel:  logging.Info,
+		HeartbeatFrequency: heartbeatFrequency,
+		WorkerFrequency:    workerFrequency,
+		LogLevel:           logging.Info,
 	}
 
 	//This starts the tracker for all handlers
@@ -27,15 +29,15 @@ func main() {
 
 	timeToKill := time.NewTicker(time.Second * 120)
 
-	logger.Infof("starting activity tracker with %v second frequency ...", frequency)
+	logger.Infof("starting activity tracker with %vs heartbeat and %vs worker frequency...", heartbeatFrequency, workerFrequency)
 
 	for {
 		select {
 		case heartbeat := <-heartbeatCh:
 			if !heartbeat.WasAnyActivity {
-				logger.Infof("no activity detected in the last %v seconds\n\n\n", int(frequency))
+				logger.Infof("no activity detected in the last %v seconds\n\n\n", int(heartbeatFrequency))
 			} else {
-				logger.Infof("activity detected in the last %v seconds.", int(frequency))
+				logger.Infof("activity detected in the last %v seconds.", int(heartbeatFrequency))
 				logger.Infof("Activity type:\n")
 				for activityType, times := range heartbeat.ActivityMap {
 					logger.Infof("activityType : %v times: %v\n", activityType, len(times))
