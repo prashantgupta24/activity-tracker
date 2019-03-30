@@ -4,6 +4,10 @@
 
 It is a libary that lets you monitor certain activities on your machine, and sends a heartbeat at a periodic (configurable) time detailing all the activity changes during that time. The activities that you want to monitor are **pluggable** handlers for those activities and can be added or removed according to your needs.
 
+## Installation
+
+## Usage
+
 ## Example
 
 Suppose you want to track Activities A, B and C on your machine, and you want the tracker to monitor every 5 minutes. What it would do then is to send you heartbeats every 5 minutes, and each heartbeat would contain whether any of A, B or C occured within those 5 minutes, and if so, at what times.
