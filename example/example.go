@@ -16,7 +16,7 @@ func main() {
 
 	activityTracker := &tracker.Instance{
 		Frequency: frequency,
-		LogLevel:  logging.Debug,
+		LogLevel:  logging.Info,
 	}
 
 	//This starts the tracker for all handlers
