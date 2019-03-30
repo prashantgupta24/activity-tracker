@@ -25,7 +25,7 @@ func main() {
 	//if you only want to track certain handlers, you can use StartWithhandlers
 	//heartbeatCh := activityTracker.StartWithHanders(handler.MouseClickHandler(), handler.MouseCursorHandler())
 
-	timeToKill := time.NewTicker(time.Second * 60)
+	timeToKill := time.NewTicker(time.Second * 120)
 
 	logger.Infof("starting activity tracker with %v second frequency ...", frequency)
 

@@ -6,7 +6,55 @@ It is a libary that lets you monitor certain activities on your machine, and sen
 
 ## Installation
 
+` go get -u github.com/prashantgupta24/activity-tracker`
 ## Usage
+
+
+	frequency := 60 //value always in seconds
+
+	activityTracker := &tracker.Instance{
+		Frequency: frequency,
+		LogLevel:  logging.Info,
+	}
+
+	//This starts the tracker for all handlers
+	heartbeatCh := activityTracker.Start()
+
+	//if you only want to track certain handlers, you can use StartWithhandlers
+	//heartbeatCh := activityTracker.StartWithHanders(handler.MouseClickHandler(), handler.MouseCursorHandler())
+
+
+		select {
+		case heartbeat := <-heartbeatCh:
+			if !heartbeat.WasAnyActivity {
+				logger.Infof("no activity detected in the last %v seconds\n\n\n", int(frequency))
+			} else {
+				logger.Infof("activity detected in the last %v seconds.", int(frequency))
+				logger.Infof("Activity type:\n")
+				for activityType, times := range heartbeat.ActivityMap {
+					logger.Infof("activityType : %v times: %v\n", activityType, len(times))
+				}
+			}
+		}
+
+## Output
+
+The above code created a tracker with all (`Mouse-click`, `Mouse-movement` and `Screen-Change`) handlers activated. The `heartbeat` frequency is set to 60 seconds, i.e. every 60 seconds I received a `heartbeat` which mentioned all activities that were captured.
+
+```
+INFO[2019-03-30T14:50:17-07:00] starting activity tracker with 60 second frequency ... 
+
+INFO[2019-03-30T14:51:17-07:00] activity detected in the last 60 seconds.    
+
+INFO[2019-03-30T14:51:17-07:00] Activity type:                               
+INFO[2019-03-30T14:51:17-07:00] activityType : mouse-click times: 3          
+INFO[2019-03-30T14:51:17-07:00] activityType : cursor-move times: 5          
+INFO[2019-03-30T14:51:17-07:00] activityType : screen-change times: 3  
+```
+
+## How it works
+
+The activity tracker gives you a `heartbeat` object every 60 seconds, but there is something else to understand here. In order for the tracker to know how many times you moved the cursor, it needs to query the mouse movement library which gets the actual mouse cursor position. Ideally, I should be checking this every second to see if the mouse moved, but that will prove very 
 
 ## Example
 
@@ -14,26 +62,7 @@ Suppose you want to track Activities A, B and C on your machine, and you want th
 
 As another example, let's say you want to monitor whether there was any mouse click on your machine and you want to be monitor every 5 minutes. What you do is start the `Activity Tracker` with just the `mouse click` handler and `heartbeat` frequency set to 5 minutes. The `Start` function of the library gives you a channel which receives a `heartbeat` every 5 minutes, and it has details on whether there was a `click` in those 5 minutes, and if yes, the times the click happened.
 
-## Demo
 
-I created a tracker with `Mouse-click`, `Mouse-movement` and `Screen-Change` handlers activated. The `heartbeat` frequency was set to 12 seconds, i.e. every 12 seconds I received a `heartbeat` which mentioned all activities that were captured.
-
-```
-INFO[2019-03-29T11:35:29-07:00] starting activity tracker with 12 second frequency ...
-
-INFO[2019-03-29T11:35:31-07:00] tracker worker working                        method=activity-tracker
-INFO[2019-03-29T11:35:33-07:00] tracker worker working                        method=activity-tracker
-INFO[2019-03-29T11:35:35-07:00] tracker worker working                        method=activity-tracker
-INFO[2019-03-29T11:35:37-07:00] tracker worker working                        method=activity-tracker
-INFO[2019-03-29T11:35:39-07:00] tracker worker working                        method=activity-tracker
-INFO[2019-03-29T11:35:41-07:00] tracker worker working                        method=activity-tracker
-
-INFO[2019-03-29T11:35:41-07:00] activity detected in the last 12 seconds.    
-INFO[2019-03-29T11:35:41-07:00] Activity type:                               
-INFO[2019-03-29T11:35:41-07:00] activityType : mouse-click times: 2          
-INFO[2019-03-29T11:35:41-07:00] activityType : cursor-move times: 6          
-INFO[2019-03-29T11:35:41-07:00] activityType : screen-change times: 2   
-```
 
 # Components
 
@@ -64,7 +93,7 @@ the activity time, which is the time the activity occured within the time frame)
 
 The tracker is the main struct for the library. The `Frequency` is the main component which can be changed according to need.
 
-##### Note: Setting the `frequency` to a very less value might result in the tracker being invoked very frequently. The lowest value possible is every 10 seconds for now. (anything below that will revert it to default of 60s). The maximum value is 300s (5 minutes).
+##### Note: The `frequency` value can be set anywhere between 60 seconds - 300 seconds. Not setting it or setting it to anything other than the allowed range will revert it to default of 60s.
 
 ### Activity and Handler
 
