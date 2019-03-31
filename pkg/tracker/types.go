@@ -9,14 +9,14 @@ import (
 
 //Instance is an instance of the tracker
 type Instance struct {
-	HeartbeatFrequency int //the frequency at which you want the heartbeat (in seconds, default 60s)
-	WorkerFrequency    int //therequency at which you want the checks to happen within a heartbeat (in seconds, default 5s)
-	LogLevel           string
-	LogFormat          string
-	isTest             bool //only for testing purposes
-	activityCh         chan *activity.Instance
-	quit               chan struct{}
-	handlers           map[activity.Type]handler.Instance
+	HeartbeatInterval int //the interval at which you want the heartbeat (in seconds, default 60s)
+	WorkerInterval    int //the interval at which you want the checks to happen within a heartbeat (in seconds, default 5s)
+	LogLevel          string
+	LogFormat         string
+	isTest            bool //only for testing purposes
+	activityCh        chan *activity.Instance
+	quit              chan struct{}
+	handlers          map[activity.Type]handler.Instance
 }
 
 /*Heartbeat is the data packet sent from the tracker to the user.

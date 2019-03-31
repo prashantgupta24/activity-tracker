@@ -31,79 +31,79 @@ func (suite *TestTracker) SetupSuite() {
 
 //Run once before each test
 func (suite *TestTracker) SetupTest() {
-	heartbeatFrequency := 1 //second
+	heartbeatInterval := 1 //second
 
 	suite.tracker = &Instance{
-		HeartbeatFrequency: heartbeatFrequency,
-		isTest:             true,
+		HeartbeatInterval: heartbeatInterval,
+		isTest:            true,
 		//LogLevel:           "debug",
 	}
 }
 
-func (suite *TestTracker) TestTrackerValidateFrequency() {
+func (suite *TestTracker) TestTrackerValidateInterval() {
 	t := suite.T()
 
 	var tracker *Instance
 
 	//testing with empty
 	tracker = &Instance{}
-	heartbeatFrequency, workerFrequency := tracker.validateFrequencies()
-	assert.Equal(t, time.Duration(defaultHFrequency), heartbeatFrequency, "tracker should get default frequency")
-	assert.Equal(t, time.Duration(defaultWFrequency), workerFrequency, "tracker should get default frequency")
+	heartbeatInterval, workerInterval := tracker.validateIntervals()
+	assert.Equal(t, time.Duration(defaultHInterval), heartbeatInterval, "tracker should get default Interval")
+	assert.Equal(t, time.Duration(defaultWInterval), workerInterval, "tracker should get default Interval")
 
 	//testing with 0
 	tracker = &Instance{
-		HeartbeatFrequency: 0,
-		WorkerFrequency:    0,
+		HeartbeatInterval: 0,
+		WorkerInterval:    0,
 	}
-	heartbeatFrequency, workerFrequency = tracker.validateFrequencies()
-	assert.Equal(t, time.Duration(defaultHFrequency), heartbeatFrequency, "tracker should get default frequency")
-	assert.Equal(t, time.Duration(defaultWFrequency), workerFrequency, "tracker should get default frequency")
+	heartbeatInterval, workerInterval = tracker.validateIntervals()
+	assert.Equal(t, time.Duration(defaultHInterval), heartbeatInterval, "tracker should get default Interval")
+	assert.Equal(t, time.Duration(defaultWInterval), workerInterval, "tracker should get default Interval")
 
 	//testing with -1
 	tracker = &Instance{
-		HeartbeatFrequency: -1,
-		WorkerFrequency:    -1,
+		HeartbeatInterval: -1,
+		WorkerInterval:    -1,
 	}
-	heartbeatFrequency, workerFrequency = tracker.validateFrequencies()
-	assert.Equal(t, time.Duration(defaultHFrequency), heartbeatFrequency, "tracker should get default frequency")
-	assert.Equal(t, time.Duration(defaultWFrequency), workerFrequency, "tracker should get default frequency")
+	heartbeatInterval, workerInterval = tracker.validateIntervals()
+	assert.Equal(t, time.Duration(defaultHInterval), heartbeatInterval, "tracker should get default Interval")
+	assert.Equal(t, time.Duration(defaultWInterval), workerInterval, "tracker should get default Interval")
 
 	//testing with min
 	tracker = &Instance{
-		HeartbeatFrequency: minHFrequency,
-		WorkerFrequency:    minWFrequency,
+		HeartbeatInterval: minHInterval,
+		WorkerInterval:    minWInterval,
 	}
-	heartbeatFrequency, workerFrequency = tracker.validateFrequencies()
-	assert.Equal(t, time.Duration(minHFrequency), heartbeatFrequency, "tracker should retain original frequency")
-	assert.Equal(t, time.Duration(minWFrequency), workerFrequency, "tracker should retain original frequency")
+	heartbeatInterval, workerInterval = tracker.validateIntervals()
+	assert.Equal(t, time.Duration(minHInterval), heartbeatInterval, "tracker should retain original Interval")
+	assert.Equal(t, time.Duration(minWInterval), workerInterval, "tracker should retain original Interval")
 
 	//testing with max
 	tracker = &Instance{
-		HeartbeatFrequency: maxHFrequency,
-		WorkerFrequency:    maxWFrequency,
+		HeartbeatInterval: maxHInterval,
+		WorkerInterval:    maxWInterval,
 	}
-	heartbeatFrequency, workerFrequency = tracker.validateFrequencies()
-	assert.Equal(t, time.Duration(maxHFrequency), heartbeatFrequency, "tracker should retain original frequency")
-	assert.Equal(t, time.Duration(maxWFrequency), workerFrequency, "tracker should retain original frequency")
+	heartbeatInterval, workerInterval = tracker.validateIntervals()
+	assert.Equal(t, time.Duration(maxHInterval), heartbeatInterval, "tracker should retain original Interval")
+	assert.Equal(t, time.Duration(maxWInterval), workerInterval, "tracker should retain original Interval")
 
 	//testing with test instance = false
 	tracker = &Instance{
-		HeartbeatFrequency: 1,
-		isTest:             false,
+		HeartbeatInterval: 1,
+		isTest:            false,
 	}
-	heartbeatFrequency, workerFrequency = tracker.validateFrequencies()
-	assert.Equal(t, time.Duration(defaultHFrequency), heartbeatFrequency, "tracker should get default frequency")
-	assert.Equal(t, time.Duration(defaultWFrequency), workerFrequency, "tracker should get default frequency")
+	heartbeatInterval, workerInterval = tracker.validateIntervals()
+	assert.Equal(t, time.Duration(defaultHInterval), heartbeatInterval, "tracker should get default Interval")
+	assert.Equal(t, time.Duration(defaultWInterval), workerInterval, "tracker should get default Interval")
 
 	//testing with test instance = true
 	tracker = &Instance{
-		HeartbeatFrequency: 1,
-		isTest:             true,
+		HeartbeatInterval: 1,
+		isTest:            true,
 	}
-	heartbeatFrequency, workerFrequency = tracker.validateFrequencies()
-	assert.Equal(t, time.Duration(1), heartbeatFrequency, "tracker should retain original frequency since it is a test")
-	assert.Equal(t, heartbeatFrequency, workerFrequency, "worker should match heartbeat since it is a test")
+	heartbeatInterval, workerInterval = tracker.validateIntervals()
+	assert.Equal(t, time.Duration(1), heartbeatInterval, "tracker should retain original Interval since it is a test")
+	assert.Equal(t, heartbeatInterval, workerInterval, "worker should match heartbeat since it is a test")
 }
 func (suite *TestTracker) TestDupHandlerRegistration() {
 	t := suite.T()
