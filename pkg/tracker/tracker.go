@@ -13,16 +13,14 @@ import (
 const (
 	preHeartbeatTime = time.Millisecond * 100
 	//heartbeat (seconds)
-	minHFrequency     = 60
-	maxHFrequency     = 300
-	defaultHFrequency = 60
+	minHInterval     = 60
+	maxHInterval     = 300
+	defaultHInterval = 60
 
 	//worker (seconds)
-	minWFrequency     = 4
-	maxWFrequency     = minHFrequency
-	defaultWFrequency = minHFrequency
-
-	numWorkerFrequencyDivisions = 5
+	minWInterval     = 4
+	maxWInterval     = minHInterval
+	defaultWInterval = minHInterval
 )
 
 //StartWithHandlers starts the tracker with a set of handlers
@@ -42,11 +40,11 @@ func (tracker *Instance) StartWithHandlers(handlers ...handler.Instance) (heartb
 			"method": "activity-tracker",
 		})
 
-		//instantiating ticker frequencies
-		heartbeatFrequency, workerFrequency := tracker.validateFrequencies()
+		//instantiating ticker intervals
+		heartbeatInterval, workerInterval := tracker.validateIntervals()
 
-		tickerHeartbeat := time.NewTicker(heartbeatFrequency * time.Second)
-		tickerWorker := time.NewTicker(workerFrequency*time.Second - preHeartbeatTime)
+		tickerHeartbeat := time.NewTicker(heartbeatInterval * time.Second)
+		tickerWorker := time.NewTicker(workerInterval*time.Second - preHeartbeatTime)
 
 		activityMap := makeActivityMap()
 
@@ -62,14 +60,14 @@ func (tracker *Instance) StartWithHandlers(handlers ...handler.Instance) (heartb
 				trackerLog.Debugln("tracker heartbeat checking")
 				var heartbeat *Heartbeat
 				if len(activityMap) == 0 {
-					logger.Debugf("no activity detected in the last %v seconds ...\n", int(heartbeatFrequency))
+					logger.Debugf("no activity detected in the last %v seconds ...\n", int(heartbeatInterval))
 					heartbeat = &Heartbeat{
 						WasAnyActivity: false,
 						ActivityMap:    nil,
 						Time:           time.Now(),
 					}
 				} else {
-					trackerLog.Debugf("activity detected in the last %v seconds ...\n", int(heartbeatFrequency))
+					trackerLog.Debugf("activity detected in the last %v seconds ...\n", int(heartbeatInterval))
 					heartbeat = &Heartbeat{
 						WasAnyActivity: true,
 						ActivityMap:    activityMap,
@@ -120,28 +118,28 @@ func makeActivityMap() (activityMap map[activity.Type][]time.Time) {
 	return activityMap
 }
 
-func (tracker *Instance) validateFrequencies() (heartbeatFreqReturn, workerFreqReturn time.Duration) {
-	heartbeatFreq := tracker.HeartbeatFrequency
-	workerFreq := tracker.WorkerFrequency
+func (tracker *Instance) validateIntervals() (heartbeatIntervalReturn, workerIntervalReturn time.Duration) {
+	heartbeatInterval := tracker.HeartbeatInterval
+	workerInterval := tracker.WorkerInterval
 
 	if tracker.isTest {
-		heartbeatFreqReturn = time.Duration(heartbeatFreq)
-		workerFreqReturn = time.Duration(heartbeatFreq)
+		heartbeatIntervalReturn = time.Duration(heartbeatInterval)
+		workerIntervalReturn = time.Duration(heartbeatInterval)
 		return
 	}
 
 	//heartbeat check
-	if heartbeatFreq >= minHFrequency && heartbeatFreq <= maxHFrequency {
-		heartbeatFreqReturn = time.Duration(heartbeatFreq) //within range
+	if heartbeatInterval >= minHInterval && heartbeatInterval <= maxHInterval {
+		heartbeatIntervalReturn = time.Duration(heartbeatInterval) //within range
 	} else {
-		heartbeatFreqReturn = time.Duration(defaultHFrequency)
+		heartbeatIntervalReturn = time.Duration(defaultHInterval)
 	}
 
 	//worker check
-	if workerFreq >= minWFrequency && workerFreq <= maxWFrequency {
-		workerFreqReturn = time.Duration(workerFreq) //within range
+	if workerInterval >= minWInterval && workerInterval <= maxWInterval {
+		workerIntervalReturn = time.Duration(workerInterval) //within range
 	} else {
-		workerFreqReturn = time.Duration(defaultWFrequency)
+		workerIntervalReturn = time.Duration(defaultWInterval)
 	}
 	return
 }
