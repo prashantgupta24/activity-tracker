@@ -150,12 +150,12 @@ There are 2 types of handlers:
 - Pull based
 
 
-The push based ones are those that push when an activity happened to the `tracker` object. An example is the `mouseClickHander`. Whenever a mouse click happens, it sends the `activity` to the `tracker` object.
+The `push` based ones are those that push to the `tracker` object when an activity happened. An example is the `mouseClickHander`. Whenever a mouse click happens, it sends the `activity` to the `tracker` object.
 
-The pull based ones are those that the `tracker` has to ask the handler to know if there was any activity happening at that moment.
+The `pull` based ones are those that the `tracker` has to ask the handler to know if there was any activity happening at that moment.
 Examples are `mouseCursorHandler` and `screenChangeHandler`. The `asking` is done through the `Trigger` function implemented by handlers.
 
-It is up to you to define how to implement the handler. Some make sense to be pull based, since it is going to be memory intensive to keep querying the mouse cursor movement. Hence it made sense to make it `pull` based.
+It is up to you to define how to implement the handler. Some make sense to be pull based, since it is going to be memory intensive to make the mouse cursor movement handler push-based. It made sense to make it `pull` based.
 
 ## New pluggable handlers for activities
 
@@ -167,7 +167,7 @@ It is up to you to define how to implement the handler. Some make sense to be pu
 	Close()
 
 	
-Any new type of handler for an activity can be easily added, it just needs to implement the above `Handler` interface and define what `type` of activity it is going to track, that's it! It can be plugged in with the tracker and then the tracker will include those activity checks in its heartbeat.
+Any new type of handler for an activity can be easily added, it just needs to implement the above `Handler` interface and define what `type` of activity it is going to track (also add the new `activity` as well), that's it! It can be plugged in with the tracker and then the tracker will include those activity checks in its heartbeat.
 
 ## Currently supported list of activities/handlers
 
