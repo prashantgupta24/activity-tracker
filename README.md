@@ -119,11 +119,11 @@ The tracker is the main struct for the library. The fields inside it are:
 ```go
 HeartbeatInterval int //the interval at which you want the heartbeat (in seconds, default 60s)
 WorkerInterval    int //the interval at which you want the checks to happen within a heartbeat (in seconds, default 5s)
-LogLevel          string
-LogFormat         string
+LogLevel          string //info or debug
+LogFormat         string //text or json
 ```
 
-#### - `HeartbeatInterval ` 
+#### - `HeartbeatInterval` 
 
 The Interval at which you want the heartbeat (in seconds, default 60s)
 
@@ -134,7 +134,6 @@ The Interval at which you want the heartbeat (in seconds, default 60s)
 The Interval at which you want the checks to happen within a heartbeat (default 60s).
 
 > The `WorkerInterval ` value can be set anywhere between 4 seconds - 60 seconds. It CANNOT be more than `HeartbeatInterval` for obvious reasons. Not setting it or setting it to anything other than the allowed range will revert it to default of 60s.
-
 
 ## Relationship between Activity and Handler
 	
