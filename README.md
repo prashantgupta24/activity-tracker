@@ -46,7 +46,7 @@ case heartbeat := <-heartbeatCh:
 
 The above code created a tracker with all (`Mouse-click`, `Mouse-movement` and `Screen-Change`) handlers activated. The `heartbeat Interval` is set to 60 seconds, i.e. every 60 seconds I received a `heartbeat` which mentioned all activities that were captured.
 
-```
+```sh
 INFO[2019-03-30T15:52:01-07:00] starting activity tracker with 60s heartbeat and 5s worker Interval... 
 
 INFO[2019-03-30T15:53:01-07:00] activity detected in the last 60 seconds.    
@@ -98,11 +98,13 @@ As another example, let's say you want to monitor whether there was any mouse cl
 
 It is the data packet sent from the tracker library to the user.
 
-	type Heartbeat struct {
-		WasAnyActivity bool //whether any activity was detected 		
-		ActivityMap       map[activity.Type][]time.Time //activity type with its times
-		Time           time.Time                    //heartbeat time
-	}
+```go
+type Heartbeat struct {
+	WasAnyActivity bool
+	ActivityMap    map[activity.Type][]time.Time //activity type with its times
+	Time           time.Time                     //heartbeat time
+}
+```
 
 `WasAnyActivity` tells if there was any activity within that time frame
 If there was, then the `ActivityMap` will tell you what type of activity it was and what all times it occured.
@@ -114,11 +116,12 @@ the activity time, which is the time the activity occured within the time frame)
 
 The tracker is the main struct for the library. 
 
-	HeartbeatInterval int //the Interval at which you want the heartbeat (in seconds, default 60s)
-	WorkerInterval    int //the Interval at which you want the checks to happen within a heartbeat (in seconds, default 60s)
-	LogLevel           string
-	LogFormat          string
-
+```go
+	HeartbeatInterval int //the interval at which you want the heartbeat (in seconds, default 60s)
+	WorkerInterval    int //the interval at which you want the checks to happen within a heartbeat (in seconds, default 5s)
+	LogLevel          string
+	LogFormat         string
+```
 
 #### - `HeartbeatInterval ` 
 
@@ -154,13 +157,13 @@ It is up to you to define how to implement the handler. Some make sense to be pu
 
 ## New pluggable handlers for activities
 
-
-	//Handler interface
-	Start(*log.Logger, chan *activity.Instance)
-	Type() activity.Type
-	Trigger() //used for pull-based handlers
-	Close()
-
+```go
+//Handler interface
+Start(*log.Logger, chan *activity.Instance)
+Type() activity.Type
+Trigger() //used for pull-based handlers
+Close()
+```
 	
 Any new type of handler for an activity can be easily added, it just needs to implement the above `Handler` interface and define what `type` of activity it is going to track (also add the new `activity` as well), that's it! It can be plugged in with the tracker and then the tracker will include those activity checks in its heartbeat.
 
@@ -169,16 +172,19 @@ Any new type of handler for an activity can be easily added, it just needs to im
 
 ### Activities
 
-	MouseCursorMovement Type = "cursor-move"
-	MouseClick          Type = "mouse-click"
-	ScreenChange        Type = "screen-change"
+```go
+MouseCursorMovement Type = "cursor-move"
+MouseClick          Type = "mouse-click"
+ScreenChange        Type = "screen-change"
+```
 
 ### Corresponding handlers
 
-	mouseCursorHandler
-	mouseClickHandler
-	screenChangeHandler
-	
+```go
+mouseCursorHandler
+mouseClickHandler
+screenChangeHandler
+```
 	
 - Mouse click (whether any mouse click happened during the time frame)
 - Mouse cursor movement (whether the mouse cursor was moved during the time frame)
