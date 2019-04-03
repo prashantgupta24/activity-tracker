@@ -8,6 +8,8 @@ MouseCursorMovement
 MouseClick
 ScreenChange
 TestActivity
+MachineSleep
+MachineWake
 
 These are the types of activities the tracker currently supports
 */
@@ -16,6 +18,8 @@ const (
 	MouseClick          Type = "mouse-click"
 	ScreenChange        Type = "screen-change"
 	TestActivity        Type = "test-activity"
+	MachineSleep        Type = "machine-sleep"
+	MachineWake         Type = "machine-wake"
 )
 
 //Instance is an instance of Activity

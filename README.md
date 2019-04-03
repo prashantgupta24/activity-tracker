@@ -25,7 +25,7 @@ activityTracker := &tracker.Instance{
 heartbeatCh := activityTracker.Start()
 
 //if you only want to track certain handlers, you can use StartWithhandlers
-//heartbeatCh := activityTracker.StartWithHanders(handler.MouseClickHandler(), handler.MouseCursorHandler())
+//heartbeatCh := activityTracker.StartWithHandlers(handler.MouseClickHandler(), handler.MouseCursorHandler())
 
 
 select {
@@ -135,10 +135,6 @@ The Interval at which you want the checks to happen within a heartbeat (default 
 
 > The `WorkerInterval ` value can be set anywhere between 4 seconds - 60 seconds. It CANNOT be more than `HeartbeatInterval` for obvious reasons. Not setting it or setting it to anything other than the allowed range will revert it to default of 60s.
 
-## Relationship between Activity and Handler
-	
-Activity and Handler have a 1-1 mapping, i.e. each handler can only handle one type of activity, and vice-versa.
-
 ## Types of handlers
 
 There are 2 types of handlers:
@@ -165,6 +161,8 @@ Close()
 ```
 	
 Any new type of handler for an activity can be easily added, it just needs to implement the above `Handler` interface and define what `type` of activity it is going to track (also add the new `activity` as well), that's it! It can be plugged in with the tracker and then the tracker will include those activity checks in its heartbeat.
+
+> Each Handler should be associated with at least one activity.
 
 ## Currently supported list of activities/handlers
 
