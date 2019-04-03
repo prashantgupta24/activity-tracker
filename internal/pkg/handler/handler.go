@@ -13,6 +13,6 @@ const (
 type Instance interface {
 	Start(*log.Logger, chan *activity.Instance)
 	Type() activity.Type
-	Trigger()
+	Trigger() //used to activate pull-based handlers
 	Close()
 }

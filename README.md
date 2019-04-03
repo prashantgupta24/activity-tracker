@@ -156,13 +156,13 @@ It is up to you to define how to implement the handler. Some make sense to be pu
 //Handler interface
 Start(*log.Logger, chan *activity.Instance)
 Type() activity.Type
-Trigger() //used for pull-based handlers
+Trigger() //used to activate pull-based handlers
 Close()
 ```
 	
 Any new type of handler for an activity can be easily added, it just needs to implement the above `Handler` interface and define what `type` of activity it is going to track (also add the new `activity` as well), that's it! It can be plugged in with the tracker and then the tracker will include those activity checks in its heartbeat.
 
-> Each Handler should be associated with at least one activity.
+> Note: Each Handler should be associated with at least one activity.
 
 ## Currently supported list of activities/handlers
 
