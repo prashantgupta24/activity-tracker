@@ -114,7 +114,7 @@ the activity time, which is the time the activity occured within the `heartbeat`
 
 ### Tracker
 
-The tracker is the main struct for the library. 
+The tracker is the main struct for the library. The fields inside it are:
 
 ```go
 HeartbeatInterval int //the interval at which you want the heartbeat (in seconds, default 60s)
