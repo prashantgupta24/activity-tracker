@@ -190,7 +190,9 @@ screenChangeHandler
 - Mouse cursor movement (whether the mouse cursor was moved during the time frame)
 - Screen change (whether the screen was changed anytime within that time frame)
 
+## Example
 
+Check out the example [here](https://github.com/prashantgupta24/activity-tracker/blob/master/example/example.go)
 
 [version-badge]: https://img.shields.io/github/release/prashantgupta24/activity-tracker.svg
 [RELEASES]: https://github.com/prashantgupta24/activity-tracker/releases
