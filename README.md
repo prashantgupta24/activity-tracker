@@ -15,10 +15,10 @@ heartbeatInterval := 60 //value always in seconds
 workerInterval := 5     //seconds
 
 activityTracker := &tracker.Instance{
-		HeartbeatInterval: heartbeatInterval,
-		WorkerInterval:    workerInterval,
-		LogLevel:          logging.Info,
-	}
+	HeartbeatInterval: heartbeatInterval,
+	WorkerInterval:    workerInterval,
+	LogLevel:          logging.Info,
+}
 
 //This starts the tracker for all handlers currently implemented. It gives you a channel on
 //which you can listen to for heartbeat objects
@@ -30,7 +30,6 @@ heartbeatCh := activityTracker.Start()
 
 select {
 case heartbeat := <-heartbeatCh:
-
 	if !heartbeat.WasAnyActivity {
 		logger.Infof("no activity detected in the last %v seconds", int(heartbeatInterval))
 	} else {
