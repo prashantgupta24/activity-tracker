@@ -74,12 +74,12 @@ The activity tracker gives you a [heartbeat](https://github.com/prashantgupta24/
 
 The `WorkerInterval` tells the tracker how frequently to check for an activity within a heartbeat. It does that by querying the handler associated with that activity. Let's say you want to know how many times the mouse cursor was moved within 60 seconds. You need to constantly ask the `mouseCursorHandler` every `x` seconds to see if the cursor moved. What you want to do is to start the tracker with the usual 60s `HeartbeatInterval `, configured with a `Mouse-cursor` handler. In this case, you set the `WorkerInterval` to 5 seconds. The tracker will then keep asking the mouse cursor handler every 5 seconds to see if there was a movement, and keep track each time there was a change. At the end of `HeartbeatInterval`, it will construct the `heartbeat` with all the changes and send it.
 
-> If you are just concerned whether any activity happened within a heartbeat or not, you can set `WorkerInterval` the same as `HeartbeatInterval`. That way, the workers need to check just once before each heartbeat to know if there was any activity registered.
+- If you want to know how many `times` an activity occured within a heartbeat, you might want to set the `WorkerInterval` to a low value, so that it keeps quering the handlers.
 
->If you want to know how many `times` an activity occured within a heartbeat, you might want to set the `WorkerInterval` to a low value, so that it keeps quering the handlers.
+- If you are just concerned whether any activity happened within a heartbeat or not, you can set `WorkerInterval` the same as `HeartbeatInterval`. That way, the workers need to check just once before each heartbeat to know if there was any activity registered.
 
 
-##### Note: If the `WorkerInterval` and the `HeartbeatInterval` are set the same, then the `WorkerInterval` always is started a fraction of a second before the `HeartbeatInterval` kicks in. This is done so that when the `heartbeat` is going to be generated at the end of `HeartbeatInterval`, the worker should have done its job of querying each of the handlers before that. 
+> Note: If the `WorkerInterval` and the `HeartbeatInterval` are set the same, then the `WorkerInterval` always is started a fraction of a second before the `HeartbeatInterval` kicks in. This is done so that when the `heartbeat` is going to be generated at the end of `HeartbeatInterval`, the worker should have done its job of querying each of the handlers before that. 
 
 ## Usecase
 
@@ -127,13 +127,13 @@ LogFormat         string
 
 The Interval at which you want the heartbeat (in seconds, default 60s)
 
-##### Note: The `HeartbeatInterval ` value can be set anywhere between 60 seconds - 300 seconds. Not setting it or setting it to anything other than the allowed range will revert it to default of 60s.
+> The `HeartbeatInterval ` value can be set anywhere between 60 seconds - 300 seconds. Not setting it or setting it to anything other than the allowed range will revert it to default of 60s.
 
 #### - `WorkerInterval` 
 
 The Interval at which you want the checks to happen within a heartbeat (default 60s).
 
-##### Note: The `WorkerInterval ` value can be set anywhere between 4 seconds - 60 seconds. It CANNOT be more than `HeartbeatInterval` for obvious reasons. Not setting it or setting it to anything other than the allowed range will revert it to default of 60s.
+> The `WorkerInterval ` value can be set anywhere between 4 seconds - 60 seconds. It CANNOT be more than `HeartbeatInterval` for obvious reasons. Not setting it or setting it to anything other than the allowed range will revert it to default of 60s.
 
 
 ## Relationship between Activity and Handler
