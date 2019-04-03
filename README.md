@@ -110,17 +110,17 @@ type Heartbeat struct {
 If there was, then the `ActivityMap` will tell you what type of activity it was and what all times it occured.
 
 The `Time` field is the time of the Heartbeat sent (not to be confused with
-the activity time, which is the time the activity occured within the time frame). 
+the activity time, which is the time the activity occured within the `heartbeat`). 
 
 ### Tracker
 
 The tracker is the main struct for the library. 
 
 ```go
-	HeartbeatInterval int //the interval at which you want the heartbeat (in seconds, default 60s)
-	WorkerInterval    int //the interval at which you want the checks to happen within a heartbeat (in seconds, default 5s)
-	LogLevel          string
-	LogFormat         string
+HeartbeatInterval int //the interval at which you want the heartbeat (in seconds, default 60s)
+WorkerInterval    int //the interval at which you want the checks to happen within a heartbeat (in seconds, default 5s)
+LogLevel          string
+LogFormat         string
 ```
 
 #### - `HeartbeatInterval ` 
