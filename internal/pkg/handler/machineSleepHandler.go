@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
+	"github.com/prashantgupta24/activity-tracker/pkg/system"
 	"github.com/prashantgupta24/mac-sleep-notifier/notifier"
 	log "github.com/sirupsen/logrus"
 )
@@ -31,12 +32,18 @@ func (m *MachineSleepHanderStruct) Start(logger *log.Logger, activityCh chan *ac
 					handlerLogger.Debug("machine awake")
 					activityCh <- &activity.Instance{
 						Type: machineWake,
+						State: &system.State{
+							IsSystemSleep: false,
+						},
 					}
 				} else {
 					if notification.Type == notifier.Sleep {
 						handlerLogger.Debug("machine sleeping")
 						activityCh <- &activity.Instance{
 							Type: machineSleep,
+							State: &system.State{
+								IsSystemSleep: true,
+							},
 						}
 					}
 				}
@@ -59,7 +66,7 @@ func (m *MachineSleepHanderStruct) Type() activity.Type {
 }
 
 //Trigger the handler - empty since it's a push based handler
-func (m *MachineSleepHanderStruct) Trigger() {}
+func (m *MachineSleepHanderStruct) Trigger(system.State) {}
 
 //Close closes the handler
 func (m *MachineSleepHanderStruct) Close() {

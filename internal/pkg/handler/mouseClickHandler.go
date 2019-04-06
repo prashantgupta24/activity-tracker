@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-vgo/robotgo"
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
+	"github.com/prashantgupta24/activity-tracker/pkg/system"
 )
 
 const (
@@ -52,7 +53,11 @@ func MouseClickHandler() *MouseClickHandlerStruct {
 }
 
 //Trigger the handler
-func (m *MouseClickHandlerStruct) Trigger() {
+func (m *MouseClickHandlerStruct) Trigger(state system.State) {
+	//no point triggering the handler since the system is asleep
+	if state.IsSystemSleep {
+		return
+	}
 	//doing it the non-blocking sender way
 	select {
 	case m.tickerCh <- struct{}{}:

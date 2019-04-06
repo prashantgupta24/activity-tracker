@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
+	"github.com/prashantgupta24/activity-tracker/pkg/system"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -39,7 +40,7 @@ func (h *TestHandlerStruct) Type() activity.Type {
 }
 
 //Trigger the handler
-func (h *TestHandlerStruct) Trigger() {
+func (h *TestHandlerStruct) Trigger(state system.State) {
 	select {
 	case h.tickerCh <- struct{}{}:
 	default:

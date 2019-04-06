@@ -14,7 +14,7 @@ func main() {
 	logger := logging.New()
 
 	heartbeatInterval := 60 //value always in seconds
-	workerInterval := 5     //seconds
+	workerInterval := 4     //seconds
 
 	activityTracker := &tracker.Instance{
 		HeartbeatInterval: heartbeatInterval,
@@ -27,9 +27,11 @@ func main() {
 	//heartbeatCh := activityTracker.Start()
 
 	//if you only want to track certain handlers, you can use StartWithhandlers
-	heartbeatCh := activityTracker.StartWithHandlers(handler.MachineSleepHandler())
+	heartbeatCh := activityTracker.StartWithHandlers(handler.MachineSleepHandler(), handler.MouseClickHandler(),
+		handler.MouseCursorHandler(), handler.ScreenChangeHandler())
 
-	timeToKill := time.NewTicker(time.Second * 120)
+	loopTime := 2
+	timeToKill := time.NewTicker(time.Second * time.Duration((heartbeatInterval*loopTime)+1))
 
 	logger.Infof("starting activity tracker with %vs heartbeat and %vs worker interval ...", heartbeatInterval, workerInterval)
 

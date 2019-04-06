@@ -7,6 +7,7 @@ import (
 
 	"github.com/prashantgupta24/activity-tracker/internal/pkg/mouse"
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
+	"github.com/prashantgupta24/activity-tracker/pkg/system"
 )
 
 const (
@@ -61,7 +62,11 @@ func MouseCursorHandler() *MouseCursorHandlerStruct {
 }
 
 //Trigger the handler
-func (m *MouseCursorHandlerStruct) Trigger() {
+func (m *MouseCursorHandlerStruct) Trigger(state system.State) {
+	//no point triggering the handler since the system is asleep
+	if state.IsSystemSleep {
+		return
+	}
 	//doing it the non-blocking sender way
 	select {
 	case m.tickerCh <- struct{}{}:

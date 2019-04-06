@@ -252,3 +252,5 @@ func (suite *TestTracker) TestTrackerStartAndQuit() {
 		assert.True(t, val)
 	}
 }
+
+//test whether test handler can change state

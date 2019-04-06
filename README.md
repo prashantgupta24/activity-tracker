@@ -135,6 +135,20 @@ The Interval at which you want the checks to happen within a heartbeat (default 
 
 > The `WorkerInterval ` value can be set anywhere between 4 seconds - 60 seconds. It CANNOT be more than `HeartbeatInterval` for obvious reasons. Not setting it or setting it to anything other than the allowed range will revert it to default of 60s.
 
+### State
+
+
+
+The `system.State` struct captures the current state of the tracker, and the whole system in general. It is used by some of the handlers to respond to a certain system state. 
+
+It is passed to the handlers when performing the Trigger, so that the handlers can take an informed decision on whether to get activated or not at that instance.
+
+#### It can serve as a way of inter-handler communication
+
+For example, the `sleepHandler` changes the state of the system to sleeping, so that the `mouseCursorHandler` and `screenChangeHandler` don't need to do any work while the system remains in the sleep state.
+
+> Note: The `screenChangeHandler` might crash sometimes while it checks if the system is sleeping, therefore as a fail-safe, if it is added as a handler, the `machineSleepHandler` is added as well.
+
 ## Types of handlers
 
 There are 2 types of handlers:
@@ -156,13 +170,14 @@ It is up to you to define how to implement the handler. Some make sense to be pu
 //Handler interface
 Start(*log.Logger, chan *activity.Instance)
 Type() activity.Type
-Trigger() //used to activate pull-based handlers
+Trigger(system.State) //used to activate pull-based handlers
 Close()
 ```
 	
-Any new type of handler for an activity can be easily added, it just needs to implement the above `Handler` interface and define what `type` of activity it is going to track (also add the new `activity` as well), that's it! It can be plugged in with the tracker and then the tracker will include those activity checks in its heartbeat.
+Any new type of handler for an activity can be easily added, it just needs to implement the above `Handler` interface and define what `type` of activity it is going to track (also add the new `activity` as well if it's a new activity), that's it! It can be plugged in with the tracker and then the tracker will include those activity checks in its heartbeat.
 
-> Note: Each Handler should be associated with at least one activity.
+> Note: Handlers have a many-to-one relationship with activity, i.e. each Handler can be associated with one or more activity (That becomes the value returned by handler's `Type`) On the other hand, each activity should be tracked by only ONE handler (which makes sense).
+> As a fail-safe, if the tracker is started with more than one handler tracking the same activity, then only 1 handler will get registered for that activity.
 
 ## Currently supported list of activities/handlers
 

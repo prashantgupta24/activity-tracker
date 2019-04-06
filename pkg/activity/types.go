@@ -1,5 +1,7 @@
 package activity
 
+import "github.com/prashantgupta24/activity-tracker/pkg/system"
+
 //Type of activity as defined below
 type Type string
 
@@ -24,5 +26,6 @@ const (
 
 //Instance is an instance of Activity
 type Instance struct {
-	Type Type
+	Type  Type
+	State *system.State //optional, only needed when a handler needs to change the state of the system
 }

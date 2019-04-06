@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
+	"github.com/prashantgupta24/activity-tracker/pkg/system"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -13,6 +14,6 @@ const (
 type Instance interface {
 	Start(*log.Logger, chan *activity.Instance)
 	Type() activity.Type
-	Trigger() //used to activate pull-based handlers
+	Trigger(system.State) //used to activate pull-based handlers
 	Close()
 }
