@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/prashantgupta24/activity-tracker/internal/pkg/handler"
 	"github.com/prashantgupta24/activity-tracker/internal/pkg/logging"
 	"github.com/prashantgupta24/activity-tracker/pkg/tracker"
 )
@@ -24,11 +23,11 @@ func main() {
 
 	//This starts the tracker for all handlers. It gives you a channel
 	//which you can listen to for heartbeat objects
-	//heartbeatCh := activityTracker.Start()
+	heartbeatCh := activityTracker.Start()
 
-	//if you only want to track certain handlers, you can use StartWithhandlers
-	heartbeatCh := activityTracker.StartWithHandlers(handler.MachineSleepHandler(), handler.MouseClickHandler(),
-		handler.MouseCursorHandler(), handler.ScreenChangeHandler())
+	// //if you only want to track certain handlers, you can use StartWithhandlers
+	// heartbeatCh := activityTracker.StartWithHandlers(handler.MouseClickHandler(),
+	// 	handler.MouseCursorHandler())
 
 	loopTime := 2
 	timeToKill := time.NewTicker(time.Second * time.Duration((heartbeatInterval*loopTime)+1))

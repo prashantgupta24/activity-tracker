@@ -12,7 +12,6 @@ import (
 func getAllHandlers() []handler.Instance {
 	return []handler.Instance{
 		handler.MouseClickHandler(), handler.MouseCursorHandler(),
-		handler.ScreenChangeHandler(), handler.MachineSleepHandler(),
 	}
 }
 
@@ -47,7 +46,30 @@ func (tracker *Instance) validateIntervals() (heartbeatIntervalReturn, workerInt
 	return
 }
 
+//validate all handlers with certain rules
+func validateHandlers(handlers ...handler.Instance) []handler.Instance {
+
+	isMachineSleepHandlerPresent := false
+
+	for _, handler := range handlers {
+		switch handler.Type() {
+		case activity.MachineSleep, activity.MachineWake:
+			isMachineSleepHandlerPresent = true
+		}
+	}
+
+	//condition 1, adding machine sleep handler as a fail-safe in all scenarios
+	if !isMachineSleepHandlerPresent {
+		handlers = append(handlers, handler.MachineSleepHandler())
+	}
+	return handlers
+}
+
 func (tracker *Instance) registerHandlers(logger *log.Logger, handlers ...handler.Instance) {
+	//validate handlers first
+	if !tracker.isTest {
+		handlers = validateHandlers(handlers...)
+	}
 
 	tracker.handlers = make(map[activity.Type]handler.Instance)
 	tracker.activityCh = make(chan *activity.Instance, len(handlers)) // number based on types of activities being tracked

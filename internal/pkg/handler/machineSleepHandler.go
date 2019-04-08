@@ -14,22 +14,24 @@ const (
 
 //MachineSleepHanderStruct is a handler for machine sleep/awake related events
 type MachineSleepHanderStruct struct {
-	quit chan struct{}
+	sleepHandlerLogger *log.Entry
+	quit               chan struct{}
 }
 
 //Start the handler
 func (m *MachineSleepHanderStruct) Start(logger *log.Logger, activityCh chan *activity.Instance) {
 	m.quit = make(chan struct{})
-	go func(logger *log.Logger) {
-		handlerLogger := logger.WithFields(log.Fields{
-			"method": "machine-sleep-handler",
-		})
+	m.sleepHandlerLogger = logger.WithFields(log.Fields{
+		"method": "machine-sleep-handler",
+	})
+
+	go func() {
 		notifierCh := notifier.GetInstance().Start()
 		for {
 			select {
 			case notification := <-notifierCh:
 				if notification.Type == notifier.Awake {
-					handlerLogger.Debug("machine awake")
+					m.sleepHandlerLogger.Debug("machine awake")
 					activityCh <- &activity.Instance{
 						Type: machineWake,
 						State: &system.State{
@@ -38,7 +40,7 @@ func (m *MachineSleepHanderStruct) Start(logger *log.Logger, activityCh chan *ac
 					}
 				} else {
 					if notification.Type == notifier.Sleep {
-						handlerLogger.Debug("machine sleeping")
+						m.sleepHandlerLogger.Debug("machine sleeping")
 						activityCh <- &activity.Instance{
 							Type: machineSleep,
 							State: &system.State{
@@ -52,7 +54,7 @@ func (m *MachineSleepHanderStruct) Start(logger *log.Logger, activityCh chan *ac
 				return
 			}
 		}
-	}(logger)
+	}()
 }
 
 //MachineSleepHandler returns an instance of the struct
