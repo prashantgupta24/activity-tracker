@@ -76,6 +76,8 @@ The activity tracker gives you a [heartbeat](https://github.com/prashantgupta24/
 
 The `WorkerInterval` tells the tracker how frequently to check for an activity within a heartbeat. It does that by querying the handler associated with that activity. Let's say you want to know how many times the mouse cursor was moved within 60 seconds. You need to constantly ask the `mouseCursorHandler` every `x` seconds to see if the cursor moved. What you want to do is to start the tracker with the usual 60s `HeartbeatInterval `, configured with a `Mouse-cursor` handler. In this case, you set the `WorkerInterval` to 5 seconds. The tracker will then keep asking the mouse cursor handler every 5 seconds to see if there was a movement, and keep track each time there was a change. At the end of `HeartbeatInterval`, it will construct the `heartbeat` with all the changes and send it.
 
+**Note :** This is applicable only to [pull-based handlers](https://github.com/prashantgupta24/activity-tracker#types-of-handlers). For push-based, `WorkerInterval` does not matter.
+
 - If you want to know how many `times` an activity occured within a heartbeat, you might want to set the `WorkerInterval` to a low value, so that it keeps quering the handlers.
 
 - If you are just concerned whether any activity happened within a heartbeat or not, you can set `WorkerInterval` the same as `HeartbeatInterval`. That way, the workers need to check just once before each heartbeat to know if there was any activity registered.
@@ -155,7 +157,7 @@ There are 2 types of handlers:
 - Pull based
 
 
-The `push` based ones are those that push to the `tracker` object when an activity happened. Examples are the `mouseClickHander` and `machineSleepHandler`. Whenever a mouse-click/machine-sleep happens, it sends the `activity` to the `tracker` object.
+The `push` based ones are those that automatically push to the `tracker` object when an activity happened. Examples are the `mouseClickHander` and `machineSleepHandler`. Whenever a mouse-click/machine-sleep happens, it sends the `activity` to the `tracker` object.
 
 The `pull` based ones are those that the `tracker` has to ask the handler to know if there was any activity happening at that moment.
 Examples are `mouseCursorHandler` and `screenChangeHandler`. The `asking` is done through the `Trigger` function implemented by handlers.
