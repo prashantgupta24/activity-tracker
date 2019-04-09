@@ -7,7 +7,7 @@ import (
 
 	"github.com/prashantgupta24/activity-tracker/internal/pkg/handler"
 	"github.com/prashantgupta24/activity-tracker/internal/pkg/logging"
-	"github.com/prashantgupta24/activity-tracker/pkg/activity"
+	"github.com/prashantgupta24/activity-tracker/pkg/system"
 )
 
 const (
@@ -34,6 +34,9 @@ func (tracker *Instance) StartWithHandlers(handlers ...handler.Instance) (heartb
 	heartbeatCh = make(chan *Heartbeat, 1)
 
 	tracker.quit = make(chan struct{})
+	tracker.state = &system.State{
+		IsSystemSleep: false,
+	}
 
 	go func(logger *log.Logger, tracker *Instance) {
 		trackerLog := logger.WithFields(log.Fields{
@@ -54,7 +57,7 @@ func (tracker *Instance) StartWithHandlers(handlers ...handler.Instance) (heartb
 				trackerLog.Debugln("tracker worker working")
 				//time to trigger all registered handlers
 				for _, handler := range tracker.handlers {
-					handler.Trigger()
+					handler.Trigger(*tracker.state) //sending a copy of the state
 				}
 			case <-tickerHeartbeat.C:
 				trackerLog.Debugln("tracker heartbeat checking")
@@ -78,6 +81,10 @@ func (tracker *Instance) StartWithHandlers(handlers ...handler.Instance) (heartb
 				activityMap = makeActivityMap() //reset the activityMap map
 				trackerLog.Debugln("**************** END OF CHECK ********************")
 			case activity := <-tracker.activityCh:
+				if activity.State != nil {
+					trackerLog.Debugf("received state change request for %v activity", activity.Type)
+					tracker.state = activity.State
+				}
 				timeNow := time.Now()
 				activityMap[activity.Type] = append(activityMap[activity.Type], timeNow)
 				trackerLog.Debugf("activity received: \n%#v\n", activity)
@@ -106,53 +113,7 @@ func (tracker *Instance) Start() (heartbeatCh chan *Heartbeat) {
 	return tracker.StartWithHandlers(getAllHandlers()...)
 }
 
-func getAllHandlers() []handler.Instance {
-	return []handler.Instance{
-		handler.MouseClickHandler(), handler.MouseCursorHandler(),
-		handler.ScreenChangeHandler(),
-	}
-}
-
-func makeActivityMap() (activityMap map[activity.Type][]time.Time) {
-	activityMap = make(map[activity.Type][]time.Time)
-	return activityMap
-}
-
-func (tracker *Instance) validateIntervals() (heartbeatIntervalReturn, workerIntervalReturn time.Duration) {
-	heartbeatInterval := tracker.HeartbeatInterval
-	workerInterval := tracker.WorkerInterval
-
-	if tracker.isTest {
-		heartbeatIntervalReturn = time.Duration(heartbeatInterval)
-		workerIntervalReturn = time.Duration(heartbeatInterval)
-		return
-	}
-
-	//heartbeat check
-	if heartbeatInterval >= minHInterval && heartbeatInterval <= maxHInterval {
-		heartbeatIntervalReturn = time.Duration(heartbeatInterval) //within range
-	} else {
-		heartbeatIntervalReturn = time.Duration(defaultHInterval)
-	}
-
-	//worker check
-	if workerInterval >= minWInterval && workerInterval <= maxWInterval {
-		workerIntervalReturn = time.Duration(workerInterval) //within range
-	} else {
-		workerIntervalReturn = time.Duration(defaultWInterval)
-	}
-	return
-}
-
-func (tracker *Instance) registerHandlers(logger *log.Logger, handlers ...handler.Instance) {
-
-	tracker.handlers = make(map[activity.Type]handler.Instance)
-	tracker.activityCh = make(chan *activity.Instance, len(handlers)) // number based on types of activities being tracked
-
-	for _, handler := range handlers {
-		if _, ok := tracker.handlers[handler.Type()]; !ok { //duplicate registration prevention
-			tracker.handlers[handler.Type()] = handler
-			handler.Start(logger, tracker.activityCh)
-		}
-	}
+//GetTrackerSystemState returns a copy of state of the system which is being used by the tracker
+func (tracker *Instance) GetTrackerSystemState() system.State {
+	return *tracker.state
 }

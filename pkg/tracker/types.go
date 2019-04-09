@@ -5,6 +5,7 @@ import (
 
 	"github.com/prashantgupta24/activity-tracker/internal/pkg/handler"
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
+	"github.com/prashantgupta24/activity-tracker/pkg/system"
 )
 
 //Instance is an instance of the tracker
@@ -13,7 +14,8 @@ type Instance struct {
 	WorkerInterval    int //the interval at which you want the checks to happen within a heartbeat (in seconds, default 5s)
 	LogLevel          string
 	LogFormat         string
-	isTest            bool //only for testing purposes
+	state             *system.State //maintains the state of the system
+	isTest            bool          //only for testing purposes
 	activityCh        chan *activity.Instance
 	quit              chan struct{}
 	handlers          map[activity.Type]handler.Instance

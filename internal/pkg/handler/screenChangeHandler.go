@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-vgo/robotgo"
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
+	"github.com/prashantgupta24/activity-tracker/pkg/system"
 )
 
 const (
@@ -64,7 +65,12 @@ func ScreenChangeHandler() *ScreenChangeHandlerStruct {
 }
 
 //Trigger the handler
-func (s *ScreenChangeHandlerStruct) Trigger() {
+func (s *ScreenChangeHandlerStruct) Trigger(state system.State) {
+	//no point triggering the handler since the system is asleep
+	if state.IsSystemSleep {
+		log.Infof("%v system sleeping so screen checker not doing any checking", time.Now())
+		return
+	}
 	//doing it the non-blocking sender way
 	select {
 	case s.tickerCh <- struct{}{}:

@@ -7,6 +7,7 @@ import (
 
 	"github.com/prashantgupta24/activity-tracker/internal/pkg/mouse"
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
+	"github.com/prashantgupta24/activity-tracker/pkg/system"
 )
 
 const (
@@ -15,7 +16,8 @@ const (
 
 //MouseCursorHandlerStruct is the handler for mouse cursor movements
 type MouseCursorHandlerStruct struct {
-	tickerCh chan struct{}
+	cursurHandlerLogger *log.Entry
+	tickerCh            chan struct{}
 }
 
 type cursorInfo struct {
@@ -27,16 +29,16 @@ type cursorInfo struct {
 func (m *MouseCursorHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Instance) {
 
 	m.tickerCh = make(chan struct{})
+	m.cursurHandlerLogger = logger.WithFields(log.Fields{
+		"method": "mouse-cursor-handler",
+	})
 
-	go func(logger *log.Logger) {
-		handlerLogger := logger.WithFields(log.Fields{
-			"method": "mouse-cursor-handler",
-		})
+	go func() {
 		lastMousePos := mouse.GetPosition()
 		for range m.tickerCh {
-			handlerLogger.Debugf("mouse cursor checked")
+			m.cursurHandlerLogger.Debugf("mouse cursor checked")
 			commCh := make(chan *cursorInfo)
-			go checkCursorChange(handlerLogger, commCh, lastMousePos)
+			go checkCursorChange(m.cursurHandlerLogger, commCh, lastMousePos)
 			select {
 			case cursorInfo := <-commCh:
 				if cursorInfo.didCursorMove {
@@ -47,12 +49,12 @@ func (m *MouseCursorHandlerStruct) Start(logger *log.Logger, activityCh chan *ac
 				}
 			case <-time.After(timeout * time.Millisecond):
 				//timeout, do nothing
-				handlerLogger.Debugf("timeout happened after %vms while checking mouse cursor handler", timeout)
+				m.cursurHandlerLogger.Debugf("timeout happened after %vms while checking mouse cursor handler", timeout)
 			}
 		}
-		handlerLogger.Infof("stopping cursor handler")
+		m.cursurHandlerLogger.Infof("stopping cursor handler")
 		return
-	}(logger)
+	}()
 }
 
 //MouseCursorHandler returns an instance of the struct
@@ -61,7 +63,12 @@ func MouseCursorHandler() *MouseCursorHandlerStruct {
 }
 
 //Trigger the handler
-func (m *MouseCursorHandlerStruct) Trigger() {
+func (m *MouseCursorHandlerStruct) Trigger(state system.State) {
+	//no point triggering the handler since the system is asleep
+	if state.IsSystemSleep {
+		m.cursurHandlerLogger.Debugf("system sleeping so not working")
+		return
+	}
 	//doing it the non-blocking sender way
 	select {
 	case m.tickerCh <- struct{}{}:

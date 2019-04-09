@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-vgo/robotgo"
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
+	"github.com/prashantgupta24/activity-tracker/pkg/system"
 )
 
 const (
@@ -13,7 +14,8 @@ const (
 
 //MouseClickHandlerStruct is the handler for mouse clicks
 type MouseClickHandlerStruct struct {
-	tickerCh chan struct{}
+	clickHandlerLogger *log.Entry
+	tickerCh           chan struct{}
 }
 
 //Start the handler
@@ -21,29 +23,30 @@ func (m *MouseClickHandlerStruct) Start(logger *log.Logger, activityCh chan *act
 	m.tickerCh = make(chan struct{})
 	registrationFree := make(chan struct{})
 
-	go func(logger *log.Logger) {
-		handlerLogger := logger.WithFields(log.Fields{
-			"method": "mouse-click-handler",
-		})
-		go addMouseClickRegistration(handlerLogger, activityCh, registrationFree) //run once before first check
+	m.clickHandlerLogger = logger.WithFields(log.Fields{
+		"method": "mouse-click-handler",
+	})
+
+	go func() {
+		go addMouseClickRegistration(m.clickHandlerLogger, activityCh, registrationFree) //run once before first check
 		for range m.tickerCh {
-			handlerLogger.Debugln("mouse clicker checked")
+			m.clickHandlerLogger.Debugln("mouse clicker checked")
 			select {
 			case _, ok := <-registrationFree:
 				if ok {
-					handlerLogger.Debugf("registration free \n")
-					go addMouseClickRegistration(handlerLogger, activityCh, registrationFree)
+					m.clickHandlerLogger.Debugf("registration free \n")
+					go addMouseClickRegistration(m.clickHandlerLogger, activityCh, registrationFree)
 				} else {
-					handlerLogger.Errorf("error : channel closed \n")
+					m.clickHandlerLogger.Errorf("error : channel closed \n")
 					return
 				}
 			default:
-				handlerLogger.Debugf("registration is busy, do nothing\n")
+				m.clickHandlerLogger.Debugf("registration is busy, do nothing\n")
 			}
 		}
-		handlerLogger.Infof("stopping click handler")
+		m.clickHandlerLogger.Infof("stopping click handler")
 		return
-	}(logger)
+	}()
 }
 
 //MouseClickHandler returns an instance of the struct
@@ -52,7 +55,12 @@ func MouseClickHandler() *MouseClickHandlerStruct {
 }
 
 //Trigger the handler
-func (m *MouseClickHandlerStruct) Trigger() {
+func (m *MouseClickHandlerStruct) Trigger(state system.State) {
+	//no point triggering the handler since the system is asleep
+	if state.IsSystemSleep {
+		m.clickHandlerLogger.Debugf("system sleeping so not working")
+		return
+	}
 	//doing it the non-blocking sender way
 	select {
 	case m.tickerCh <- struct{}{}:

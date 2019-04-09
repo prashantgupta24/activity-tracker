@@ -25,7 +25,7 @@ activityTracker := &tracker.Instance{
 heartbeatCh := activityTracker.Start()
 
 //if you only want to track certain handlers, you can use StartWithhandlers
-//heartbeatCh := activityTracker.StartWithHanders(handler.MouseClickHandler(), handler.MouseCursorHandler())
+//heartbeatCh := activityTracker.StartWithHandlers(handler.MouseClickHandler(), handler.MouseCursorHandler())
 
 
 select {
@@ -44,7 +44,7 @@ case heartbeat := <-heartbeatCh:
 
 ## Output
 
-The above code created a tracker with all (`Mouse-click`, `Mouse-movement` and `Screen-Change`) handlers activated. The `heartbeat Interval` is set to 60 seconds, i.e. every 60 seconds I received a `heartbeat` which mentioned all activities that were captured.
+The above code created a tracker with all (`Mouse-click`, `Mouse-movement` and `machine-sleep`) handlers activated. The `heartbeat Interval` is set to 60 seconds, i.e. every 60 seconds I received a `heartbeat` which mentioned all activities that were captured.
 
 ```sh
 INFO[2019-03-30T15:52:01-07:00] starting activity tracker with 60s heartbeat and 5s worker Interval... 
@@ -52,9 +52,10 @@ INFO[2019-03-30T15:52:01-07:00] starting activity tracker with 60s heartbeat and
 INFO[2019-03-30T15:53:01-07:00] activity detected in the last 60 seconds.    
 
 INFO[2019-03-30T15:53:01-07:00] Activity type:                               
-INFO[2019-03-30T15:53:01-07:00] activityType : screen-change times: 7        
 INFO[2019-03-30T15:53:01-07:00] activityType : mouse-click times: 10         
-INFO[2019-03-30T15:53:01-07:00] activityType : cursor-move times: 12   
+INFO[2019-03-30T15:53:01-07:00] activityType : cursor-move times: 12
+INFO[2019-03-30T15:53:01-07:00] activityType : machine-sleep times: 1
+INFO[2019-03-30T15:53:01-07:00] activityType : machine-wake times: 1
 ```
 
 ## How it works
@@ -135,9 +136,15 @@ The Interval at which you want the checks to happen within a heartbeat (default 
 
 > The `WorkerInterval ` value can be set anywhere between 4 seconds - 60 seconds. It CANNOT be more than `HeartbeatInterval` for obvious reasons. Not setting it or setting it to anything other than the allowed range will revert it to default of 60s.
 
-## Relationship between Activity and Handler
-	
-Activity and Handler have a 1-1 mapping, i.e. each handler can only handle one type of activity, and vice-versa.
+### State
+
+The `system.State` struct captures the current state of the tracker, and the whole system in general. It is used by some of the handlers to respond to a certain system state. 
+
+It is passed to the handlers when performing the Trigger, so that the handlers can take an informed decision on whether to get activated or not at that instance.
+
+For example, the `sleepHandler` changes the state of the system to sleeping, so that the `mouseCursorHandler` and `mouseClickHandler` don't need to do any work while the system remains in the sleep state.
+
+> Note: It also serves as a way of inter-handler communication.
 
 ## Types of handlers
 
@@ -150,7 +157,7 @@ There are 2 types of handlers:
 The `push` based ones are those that push to the `tracker` object when an activity happened. An example is the `mouseClickHander`. Whenever a mouse click happens, it sends the `activity` to the `tracker` object.
 
 The `pull` based ones are those that the `tracker` has to ask the handler to know if there was any activity happening at that moment.
-Examples are `mouseCursorHandler` and `screenChangeHandler`. The `asking` is done through the `Trigger` function implemented by handlers.
+Examples is `mouseCursorHandler`. The `asking` is done through the `Trigger` function implemented by handlers.
 
 It is up to you to define how to implement the handler. Some make sense to be pull based, since it is going to be memory intensive to make the mouse cursor movement handler push-based. It made sense to make it `pull` based.
 
@@ -160,11 +167,14 @@ It is up to you to define how to implement the handler. Some make sense to be pu
 //Handler interface
 Start(*log.Logger, chan *activity.Instance)
 Type() activity.Type
-Trigger() //used for pull-based handlers
+Trigger(system.State) //used to activate pull-based handlers
 Close()
 ```
 	
-Any new type of handler for an activity can be easily added, it just needs to implement the above `Handler` interface and define what `type` of activity it is going to track (also add the new `activity` as well), that's it! It can be plugged in with the tracker and then the tracker will include those activity checks in its heartbeat.
+Any new type of handler for an activity can be easily added, it just needs to implement the above `Handler` interface and define what `type` of activity it is going to track (also add the new `activity` as well if it's a new activity), that's it! It can be plugged in with the tracker and then the tracker will include those activity checks in its heartbeat.
+
+> Note: Handlers have a many-to-one relationship with activity, i.e. each Handler can be associated with one or more activity (That becomes the value returned by handler's `Type`) On the other hand, each activity should be tracked by only ONE handler (which makes sense).
+> As a fail-safe, if the tracker is started with more than one handler tracking the same activity, then only 1 handler will get registered for that activity.
 
 ## Currently supported list of activities/handlers
 
@@ -174,7 +184,8 @@ Any new type of handler for an activity can be easily added, it just needs to im
 ```go
 MouseCursorMovement Type = "cursor-move"
 MouseClick          Type = "mouse-click"
-ScreenChange        Type = "screen-change"
+MachineSleep        Type = "machine-sleep"
+MachineWake         Type = "machine-wake"
 ```
 
 ### Corresponding handlers
@@ -182,12 +193,12 @@ ScreenChange        Type = "screen-change"
 ```go
 mouseCursorHandler
 mouseClickHandler
-screenChangeHandler
+machineSleepHandler
 ```
 	
 - Mouse click (whether any mouse click happened during the time frame)
 - Mouse cursor movement (whether the mouse cursor was moved during the time frame)
-- Screen change (whether the screen was changed anytime within that time frame)
+- Machine sleep/wake handler (**this is added by default for fail-safe measures**)
 
 ## Example
 

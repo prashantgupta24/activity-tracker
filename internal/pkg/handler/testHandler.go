@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
+	"github.com/prashantgupta24/activity-tracker/pkg/system"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -11,19 +12,24 @@ const (
 
 //TestHandlerStruct is a test handler
 type TestHandlerStruct struct {
-	tickerCh chan struct{}
+	testHandlerLogger *log.Entry
+	tickerCh          chan struct{}
 }
 
 //Start the handler
 func (h *TestHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Instance) {
 	h.tickerCh = make(chan struct{})
+	h.testHandlerLogger = logger.WithFields(log.Fields{
+		"method": "test-handler",
+	})
+
 	go func() {
 		for range h.tickerCh {
 			activityCh <- &activity.Instance{
 				Type: testActivity,
 			}
 		}
-		logger.Infof("stopping test handler")
+		h.testHandlerLogger.Infof("stopping test handler")
 		return
 	}()
 }
@@ -39,7 +45,12 @@ func (h *TestHandlerStruct) Type() activity.Type {
 }
 
 //Trigger the handler
-func (h *TestHandlerStruct) Trigger() {
+func (h *TestHandlerStruct) Trigger(state system.State) {
+	//no point triggering the handler since the system is asleep
+	if state.IsSystemSleep {
+		h.testHandlerLogger.Debugf("system sleeping so not working")
+		return
+	}
 	select {
 	case h.tickerCh <- struct{}{}:
 	default:
