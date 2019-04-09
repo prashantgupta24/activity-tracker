@@ -138,15 +138,13 @@ The Interval at which you want the checks to happen within a heartbeat (default 
 
 ### State
 
-
-
 The `system.State` struct captures the current state of the tracker, and the whole system in general. It is used by some of the handlers to respond to a certain system state. 
 
 It is passed to the handlers when performing the Trigger, so that the handlers can take an informed decision on whether to get activated or not at that instance.
 
-> It can serve as a way of inter-handler communication
-
 For example, the `sleepHandler` changes the state of the system to sleeping, so that the `mouseCursorHandler` and `mouseClickHandler` don't need to do any work while the system remains in the sleep state.
+
+> Note: It also serves as a way of inter-handler communication.
 
 ## Types of handlers
 
