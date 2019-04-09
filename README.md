@@ -187,6 +187,7 @@ Any new type of handler for an activity can be easily added, it just needs to im
 ```go
 MouseCursorMovement Type = "cursor-move"
 MouseClick          Type = "mouse-click"
+ScreenChange        Type = "screen-change"
 MachineSleep        Type = "machine-sleep"
 MachineWake         Type = "machine-wake"
 ```
@@ -202,8 +203,9 @@ machineSleepHandler
 	
 - Mouse click (whether any mouse click happened during the time frame)
 - Mouse cursor movement (whether the mouse cursor was moved during the time frame)
-- Machine sleep/wake handler (**this is added by default for fail-safe measures**)
 - Screen change handler (whether the active window was changed)
+- Machine sleep/wake handler (**this is added by default for fail-safe measures**)
+
 ## Example
 
 Check out the example [here](https://github.com/prashantgupta24/activity-tracker/blob/master/example/example.go)
