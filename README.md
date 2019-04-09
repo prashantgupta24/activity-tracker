@@ -44,7 +44,7 @@ case heartbeat := <-heartbeatCh:
 
 ## Output
 
-The above code created a tracker with all (`Mouse-click`, `Mouse-movement` and `machine-sleep`) handlers activated. The `heartbeat Interval` is set to 60 seconds, i.e. every 60 seconds I received a `heartbeat` which mentioned all activities that were captured.
+The above code created a tracker with all (`Mouse-click`, `Mouse-movement`, `screen-change` and `machine-sleep`) handlers activated. The `heartbeat Interval` is set to 60 seconds, i.e. every 60 seconds I received a `heartbeat` which mentioned all activities that were captured.
 
 ```sh
 INFO[2019-03-30T15:52:01-07:00] starting activity tracker with 60s heartbeat and 5s worker Interval... 
@@ -54,6 +54,7 @@ INFO[2019-03-30T15:53:01-07:00] activity detected in the last 60 seconds.
 INFO[2019-03-30T15:53:01-07:00] Activity type:                               
 INFO[2019-03-30T15:53:01-07:00] activityType : mouse-click times: 10         
 INFO[2019-03-30T15:53:01-07:00] activityType : cursor-move times: 12
+INFO[2019-03-30T15:53:01-07:00] activityType : screen-change times: 7
 INFO[2019-03-30T15:53:01-07:00] activityType : machine-sleep times: 1
 INFO[2019-03-30T15:53:01-07:00] activityType : machine-wake times: 1
 ```
@@ -154,10 +155,10 @@ There are 2 types of handlers:
 - Pull based
 
 
-The `push` based ones are those that push to the `tracker` object when an activity happened. An example is the `mouseClickHander`. Whenever a mouse click happens, it sends the `activity` to the `tracker` object.
+The `push` based ones are those that push to the `tracker` object when an activity happened. Examples are the `mouseClickHander` and `machineSleepHandler`. Whenever a mouse-click/machine-sleep happens, it sends the `activity` to the `tracker` object.
 
 The `pull` based ones are those that the `tracker` has to ask the handler to know if there was any activity happening at that moment.
-Examples is `mouseCursorHandler`. The `asking` is done through the `Trigger` function implemented by handlers.
+Examples are `mouseCursorHandler` and `screenChangeHandler`. The `asking` is done through the `Trigger` function implemented by handlers.
 
 It is up to you to define how to implement the handler. Some make sense to be pull based, since it is going to be memory intensive to make the mouse cursor movement handler push-based. It made sense to make it `pull` based.
 
@@ -193,13 +194,14 @@ MachineWake         Type = "machine-wake"
 ```go
 mouseCursorHandler
 mouseClickHandler
+screenChangeHandler
 machineSleepHandler
 ```
 	
 - Mouse click (whether any mouse click happened during the time frame)
 - Mouse cursor movement (whether the mouse cursor was moved during the time frame)
 - Machine sleep/wake handler (**this is added by default for fail-safe measures**)
-
+- Screen change handler (whether the active window was changed)
 ## Example
 
 Check out the example [here](https://github.com/prashantgupta24/activity-tracker/blob/master/example/example.go)

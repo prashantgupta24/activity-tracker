@@ -12,6 +12,7 @@ import (
 func getAllHandlers() []handler.Instance {
 	return []handler.Instance{
 		handler.MouseClickHandler(), handler.MouseCursorHandler(),
+		handler.ScreenChangeHandler(),
 	}
 }
 
