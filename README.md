@@ -44,7 +44,7 @@ case heartbeat := <-heartbeatCh:
 
 ## Output
 
-The above code created a tracker with all (`Mouse-click`, `Mouse-movement` and `machine-sleep`) handlers activated. The `heartbeat Interval` is set to 60 seconds, i.e. every 60 seconds I received a `heartbeat` which mentioned all activities that were captured.
+The above code created a tracker with all (`Mouse-click`, `Mouse-movement`, `screen-change` and `machine-sleep`) handlers activated. The `heartbeat Interval` is set to 60 seconds, i.e. every 60 seconds I received a `heartbeat` which mentioned all activities that were captured.
 
 ```sh
 INFO[2019-03-30T15:52:01-07:00] starting activity tracker with 60s heartbeat and 5s worker Interval... 
@@ -54,6 +54,7 @@ INFO[2019-03-30T15:53:01-07:00] activity detected in the last 60 seconds.
 INFO[2019-03-30T15:53:01-07:00] Activity type:                               
 INFO[2019-03-30T15:53:01-07:00] activityType : mouse-click times: 10         
 INFO[2019-03-30T15:53:01-07:00] activityType : cursor-move times: 12
+INFO[2019-03-30T15:53:01-07:00] activityType : screen-change times: 7
 INFO[2019-03-30T15:53:01-07:00] activityType : machine-sleep times: 1
 INFO[2019-03-30T15:53:01-07:00] activityType : machine-wake times: 1
 ```
@@ -74,6 +75,8 @@ There are 2 primary configs required for the tracker to work:
 The activity tracker gives you a [heartbeat](https://github.com/prashantgupta24/activity-tracker#heartbeat-struct) object every 60 seconds, that is based on the `HeartbeatInterval`. But there is something else to understand here. In order for the tracker to know how many times an activity occured, like how many times you moved the cursor for example, it needs to query the mouse position every `x` seconds. That's where the `WorkerInterval` comes into play.
 
 The `WorkerInterval` tells the tracker how frequently to check for an activity within a heartbeat. It does that by querying the handler associated with that activity. Let's say you want to know how many times the mouse cursor was moved within 60 seconds. You need to constantly ask the `mouseCursorHandler` every `x` seconds to see if the cursor moved. What you want to do is to start the tracker with the usual 60s `HeartbeatInterval `, configured with a `Mouse-cursor` handler. In this case, you set the `WorkerInterval` to 5 seconds. The tracker will then keep asking the mouse cursor handler every 5 seconds to see if there was a movement, and keep track each time there was a change. At the end of `HeartbeatInterval`, it will construct the `heartbeat` with all the changes and send it.
+
+**Note :** This is applicable only to [pull-based handlers](https://github.com/prashantgupta24/activity-tracker#types-of-handlers). For push-based, `WorkerInterval` does not matter.
 
 - If you want to know how many `times` an activity occured within a heartbeat, you might want to set the `WorkerInterval` to a low value, so that it keeps quering the handlers.
 
@@ -154,10 +157,10 @@ There are 2 types of handlers:
 - Pull based
 
 
-The `push` based ones are those that push to the `tracker` object when an activity happened. An example is the `mouseClickHander`. Whenever a mouse click happens, it sends the `activity` to the `tracker` object.
+The `push` based ones are those that automatically push to the `tracker` object when an activity happened. Examples are the `mouseClickHander` and `machineSleepHandler`. Whenever a mouse-click/machine-sleep happens, it sends the `activity` to the `tracker` object.
 
 The `pull` based ones are those that the `tracker` has to ask the handler to know if there was any activity happening at that moment.
-Examples is `mouseCursorHandler`. The `asking` is done through the `Trigger` function implemented by handlers.
+Examples are `mouseCursorHandler` and `screenChangeHandler`. The `asking` is done through the `Trigger` function implemented by handlers.
 
 It is up to you to define how to implement the handler. Some make sense to be pull based, since it is going to be memory intensive to make the mouse cursor movement handler push-based. It made sense to make it `pull` based.
 
@@ -173,7 +176,7 @@ Close()
 	
 Any new type of handler for an activity can be easily added, it just needs to implement the above `Handler` interface and define what `type` of activity it is going to track (also add the new `activity` as well if it's a new activity), that's it! It can be plugged in with the tracker and then the tracker will include those activity checks in its heartbeat.
 
-> Note: Handlers have a many-to-one relationship with activity, i.e. each Handler can be associated with one or more activity (That becomes the value returned by handler's `Type`) On the other hand, each activity should be tracked by only ONE handler (which makes sense).
+> Note: Handlers have a one-to-many relationship with activity, i.e. each Handler can be associated with one or more activity (That becomes the value returned by handler's `Type`) On the other hand, each activity should be tracked by only ONE handler (which makes sense).
 > As a fail-safe, if the tracker is started with more than one handler tracking the same activity, then only 1 handler will get registered for that activity.
 
 ## Currently supported list of activities/handlers
@@ -184,6 +187,7 @@ Any new type of handler for an activity can be easily added, it just needs to im
 ```go
 MouseCursorMovement Type = "cursor-move"
 MouseClick          Type = "mouse-click"
+ScreenChange        Type = "screen-change"
 MachineSleep        Type = "machine-sleep"
 MachineWake         Type = "machine-wake"
 ```
@@ -193,11 +197,13 @@ MachineWake         Type = "machine-wake"
 ```go
 mouseCursorHandler
 mouseClickHandler
+screenChangeHandler
 machineSleepHandler
 ```
 	
 - Mouse click (whether any mouse click happened during the time frame)
 - Mouse cursor movement (whether the mouse cursor was moved during the time frame)
+- Screen change handler (whether the active window was changed)
 - Machine sleep/wake handler (**this is added by default for fail-safe measures**)
 
 ## Example

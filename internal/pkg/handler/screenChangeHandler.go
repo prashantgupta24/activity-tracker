@@ -16,47 +16,46 @@ const (
 
 //ScreenChangeHandlerStruct is the handler for screen changes
 type ScreenChangeHandlerStruct struct {
-	tickerCh chan struct{}
+	screenHandlerLogger *log.Entry
+	tickerCh            chan struct{}
 }
 
 type screenInfo struct {
-	didScreenChange   bool
-	currentPixelColor string
+	didScreenChange    bool
+	currentScreenTitle string
 }
 
 //Start the handler
 func (s *ScreenChangeHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Instance) {
 
 	s.tickerCh = make(chan struct{})
+	s.screenHandlerLogger = logger.WithFields(log.Fields{
+		"method": "screen-change-handler",
+	})
 
-	go func(logger *log.Logger) {
-		handlerLogger := logger.WithFields(log.Fields{
-			"method": "screen-change-handler",
-		})
-		screenSizeX, screenSizeY := robotgo.GetScreenSize()
-		pixelPointX := int(screenSizeX / 2)
-		pixelPointY := int(screenSizeY / 2)
-		lastPixelColor := robotgo.GetPixelColor(pixelPointX, pixelPointY)
+	go func() {
+		lastScreenTitle := robotgo.GetTitle()
+
 		for range s.tickerCh {
-			handlerLogger.Debugf("screen change checked")
+			s.screenHandlerLogger.Debugf("screen change checked")
 			commCh := make(chan *screenInfo)
-			go checkScreenChange(handlerLogger, commCh, lastPixelColor, pixelPointX, pixelPointY)
+			go checkScreenChange(s.screenHandlerLogger, commCh, lastScreenTitle)
 			select {
 			case screenInfo := <-commCh:
 				if screenInfo.didScreenChange {
 					activityCh <- &activity.Instance{
 						Type: screenChangeActivity,
 					}
-					lastPixelColor = screenInfo.currentPixelColor
+					lastScreenTitle = screenInfo.currentScreenTitle
 				}
 			case <-time.After(timeout * time.Millisecond):
 				//timeout, do nothing
-				handlerLogger.Debugf("timeout happened after %vms while checking screen change handler", timeout)
+				s.screenHandlerLogger.Debugf("timeout happened after %vms while checking screen change handler", timeout)
 			}
 		}
-		handlerLogger.Infof("stopping screen change handler")
+		s.screenHandlerLogger.Infof("stopping screen change handler")
 		return
-	}(logger)
+	}()
 }
 
 //ScreenChangeHandler returns an instance of the struct
@@ -68,7 +67,7 @@ func ScreenChangeHandler() *ScreenChangeHandlerStruct {
 func (s *ScreenChangeHandlerStruct) Trigger(state system.State) {
 	//no point triggering the handler since the system is asleep
 	if state.IsSystemSleep {
-		log.Infof("%v system sleeping so screen checker not doing any checking", time.Now())
+		s.screenHandlerLogger.Debugf("system sleeping so not working")
 		return
 	}
 	//doing it the non-blocking sender way
@@ -89,23 +88,22 @@ func (s *ScreenChangeHandlerStruct) Close() {
 	close(s.tickerCh)
 }
 
-func checkScreenChange(logger *log.Entry, commCh chan *screenInfo, lastPixelColor string, pixelPointX, pixelPointY int) {
-	currentPixelColor := robotgo.GetPixelColor(pixelPointX, pixelPointY)
+func checkScreenChange(logger *log.Entry, commCh chan *screenInfo, lastScreenTitle string) {
+	currentScreenTitle := robotgo.GetTitle()
 	screenLogger := logger.WithFields(log.Fields{
-		"current-pixel": currentPixelColor,
-		"last-pixel":    lastPixelColor,
+		"current-title": currentScreenTitle,
+		"last-title":    lastScreenTitle,
 	})
-	//robotgo.MoveMouse(pixelPointX, pixelPointY)
-	if lastPixelColor != currentPixelColor {
+	if lastScreenTitle != currentScreenTitle {
 		commCh <- &screenInfo{
-			didScreenChange:   true,
-			currentPixelColor: currentPixelColor,
+			didScreenChange:    true,
+			currentScreenTitle: currentScreenTitle,
 		}
 		screenLogger.Debugf("screen changed")
 	} else { //comment this section out to test timeout logic
 		commCh <- &screenInfo{
-			didScreenChange:   false,
-			currentPixelColor: "",
+			didScreenChange:    false,
+			currentScreenTitle: "",
 		}
 		screenLogger.Debugf("screen did not change")
 	}
