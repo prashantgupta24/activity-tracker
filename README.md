@@ -174,7 +174,7 @@ Close()
 	
 Any new type of handler for an activity can be easily added, it just needs to implement the above `Handler` interface and define what `type` of activity it is going to track (also add the new `activity` as well if it's a new activity), that's it! It can be plugged in with the tracker and then the tracker will include those activity checks in its heartbeat.
 
-> Note: Handlers have a many-to-one relationship with activity, i.e. each Handler can be associated with one or more activity (That becomes the value returned by handler's `Type`) On the other hand, each activity should be tracked by only ONE handler (which makes sense).
+> Note: Handlers have a one-to-many relationship with activity, i.e. each Handler can be associated with one or more activity (That becomes the value returned by handler's `Type`) On the other hand, each activity should be tracked by only ONE handler (which makes sense).
 > As a fail-safe, if the tracker is started with more than one handler tracking the same activity, then only 1 handler will get registered for that activity.
 
 ## Currently supported list of activities/handlers
