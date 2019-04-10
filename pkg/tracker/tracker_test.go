@@ -7,6 +7,7 @@ import (
 
 	"github.com/prashantgupta24/activity-tracker/internal/pkg/handler"
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
+	"github.com/prashantgupta24/activity-tracker/pkg/system"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -117,14 +118,6 @@ func (suite *TestTracker) TestDupHandlerRegistration() {
 	assert.Equal(t, 1, len(tracker.handlers), "duplicate handlers should not be registered")
 }
 
-// func (suite *TestTracker) TestActivityHandlersNumEqual() {
-// 	t := suite.T()
-// 	numActivities := len(suite.activities)
-// 	numHandlers := len(getAllHandlers())
-
-// 	assert.Equal(t, numHandlers, numActivities, "tracker should have equal handlers and activities")
-// }
-
 func (suite *TestTracker) TestActivitiesOneByOne() {
 	t := suite.T()
 	tracker := suite.tracker
@@ -223,11 +216,7 @@ func (suite *TestTracker) TestTrackerStartAndQuit() {
 	t := suite.T()
 	tracker := suite.tracker
 
-	numHandlers := len(getAllHandlers())
-	heartbeatCh := tracker.Start()
-
-	assert.Equal(t, numHandlers, len(tracker.handlers), "tracker should have started with %v handlers by default", numHandlers)
-
+	heartbeatCh := tracker.StartWithHandlers(handler.TestHandler())
 	//close
 	var wg sync.WaitGroup
 	isHeartbeatStopped := make(chan bool)
@@ -255,5 +244,64 @@ func (suite *TestTracker) TestTrackerStartAndQuit() {
 	}
 }
 
-//test whether test handler can change state
-//test validateHandlers
+func (suite *TestTracker) TestValidateHandlers() {
+	t := suite.T()
+	machineSleepHandler := handler.MachineSleepHandler()
+
+	//case 1
+	handlers := []handler.Instance{
+		handler.MouseClickHandler(), handler.MouseCursorHandler(),
+		handler.ScreenChangeHandler(),
+	}
+	validatedHandlers := validateHandlers(handlers...)
+	assert.Contains(t, validatedHandlers, machineSleepHandler, "validateHandler() should add machine sleep handler by default")
+
+	//case 2
+	handlers = []handler.Instance{
+		handler.MachineSleepHandler(),
+	}
+	validatedHandlers = validateHandlers(handlers...)
+	assert.Contains(t, validatedHandlers, machineSleepHandler, "validateHandler() should add machine sleep handler by default")
+}
+
+func (suite *TestTracker) TestValidateHandlersOnStart() {
+	t := suite.T()
+	machineSleepHandlerType := handler.MachineSleepHandler().Type()
+
+	tracker := suite.tracker
+
+	tracker.StartWithHandlers(handler.TestHandler())
+	assert.NotContains(t, tracker.handlers, machineSleepHandlerType, "validateHandler() should not add machine sleep handler type in test")
+}
+
+func (suite *TestTracker) TestTrackerStateChange() {
+	t := suite.T()
+	tracker := suite.tracker
+	tracker.StartWithHandlers()
+
+	oldState := tracker.getTrackerSystemState()
+	assert.False(t, oldState.IsSystemSleep, "system sleep state should be false by default")
+
+	tracker.activityCh <- &activity.Instance{
+		Type: activity.TestActivity,
+		State: &system.State{
+			IsSystemSleep: true,
+		},
+	}
+
+	newState := tracker.getTrackerSystemState()
+	assert.True(t, newState.IsSystemSleep, "system sleep state should be over-written to true")
+
+}
+
+func (suite *TestTracker) TestTrackerStateChangeByValue() {
+	t := suite.T()
+	tracker := suite.tracker
+	tracker.StartWithHandlers()
+
+	oldState := tracker.getTrackerSystemState()
+	oldState.IsSystemSleep = true //this should not affect the state object since it is a copy
+
+	newState := tracker.getTrackerSystemState()
+	assert.False(t, newState.IsSystemSleep, "system sleep state should not change")
+}

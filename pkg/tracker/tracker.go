@@ -83,7 +83,7 @@ func (tracker *Instance) StartWithHandlers(handlers ...handler.Instance) (heartb
 			case activity := <-tracker.activityCh:
 				if activity.State != nil {
 					trackerLog.Debugf("received state change request for %v activity", activity.Type)
-					tracker.state = activity.State
+					tracker.updateSystemState(activity.State)
 				}
 				timeNow := time.Now()
 				activityMap[activity.Type] = append(activityMap[activity.Type], timeNow)
@@ -113,7 +113,16 @@ func (tracker *Instance) Start() (heartbeatCh chan *Heartbeat) {
 	return tracker.StartWithHandlers(getAllHandlers()...)
 }
 
-//GetTrackerSystemState returns a copy of state of the system which is being used by the tracker
-func (tracker *Instance) GetTrackerSystemState() system.State {
+//getTrackerSystemState returns a copy of state of the system which is being used by the tracker
+func (tracker *Instance) getTrackerSystemState() system.State {
+	tracker.mutex.RLock()
+	defer tracker.mutex.RUnlock()
 	return *tracker.state
+}
+
+//updateSystemState updates state of the system which is being used by the tracker
+func (tracker *Instance) updateSystemState(state *system.State) {
+	tracker.mutex.Lock()
+	defer tracker.mutex.Unlock()
+	tracker.state = state
 }

@@ -1,6 +1,7 @@
 package tracker
 
 import (
+	"sync"
 	"time"
 
 	"github.com/prashantgupta24/activity-tracker/internal/pkg/handler"
@@ -14,6 +15,7 @@ type Instance struct {
 	WorkerInterval    int //the interval at which you want the checks to happen within a heartbeat (in seconds, default 5s)
 	LogLevel          string
 	LogFormat         string
+	mutex             sync.RWMutex
 	state             *system.State //maintains the state of the system
 	isTest            bool          //only for testing purposes
 	activityCh        chan *activity.Instance
