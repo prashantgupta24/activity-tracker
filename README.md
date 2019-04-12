@@ -76,11 +76,13 @@ The activity tracker gives you a [heartbeat](https://github.com/prashantgupta24/
 
 The `WorkerInterval` tells the tracker how frequently to check for an activity within a heartbeat. It does that by querying the handler associated with that activity. Let's say you want to know how many times the mouse cursor was moved within 60 seconds. You need to constantly ask the `mouseCursorHandler` every `x` seconds to see if the cursor moved. What you want to do is to start the tracker with the usual 60s `HeartbeatInterval `, configured with a `Mouse-cursor` handler. In this case, you set the `WorkerInterval` to 5 seconds. The tracker will then keep asking the mouse cursor handler every 5 seconds to see if there was a movement, and keep track each time there was a change. At the end of `HeartbeatInterval`, it will construct the `heartbeat` with all the changes and send it.
 
-**Note :** This is applicable only to [pull-based handlers](https://github.com/prashantgupta24/activity-tracker#types-of-handlers). For push-based, `WorkerInterval` does not matter.
+For example, in the output that you saw above, it says `cursor-move times: 12`. That doesn't mean the cursor was moved only 12 times. Since the `WorkerInterval` was 5 seconds in the example, that means `cursorHandler` was asked every 5 seconds (i.e. 12 times in 60 seconds) whether the cursor moved. And it replied that the cursor had indeed moved everytime. 
+
+**Note :** This is applicable only to [pull-based handlers](https://github.com/prashantgupta24/activity-tracker#types-of-handlers). For push-based handlers, `WorkerInterval` does not matter.
 
 - If you want to know how many `times` an activity occured within a heartbeat, you might want to set the `WorkerInterval` to a low value, so that it keeps quering the handlers.
 
-- If you are just concerned whether any activity happened within a heartbeat or not, you can set `WorkerInterval` the same as `HeartbeatInterval`. That way, the workers need to check just once before each heartbeat to know if there was any activity registered.
+- If you are just concerned whether any activity happened within a heartbeat or not, you can set `WorkerInterval` to a high number (something around 10-15 seconds should do the trick). That way, the workers need not be bothered a lot of times within a `heartbeat`.
 
 
 > Note: If the `WorkerInterval` and the `HeartbeatInterval` are set the same, then the `WorkerInterval` always is started a fraction of a second before the `HeartbeatInterval` kicks in. This is done so that when the `heartbeat` is going to be generated at the end of `HeartbeatInterval`, the worker should have done its job of querying each of the handlers before that. 
