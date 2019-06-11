@@ -208,9 +208,16 @@ machineSleepHandler
 - Screen change handler (whether the active window was changed)
 - Machine sleep/wake handler (**this is added by default for fail-safe measures**)
 
+Thanks to [robotgo](https://github.com/go-vgo/robotgo) for making a lot of the handlers possible.
+
 ## Example
 
 Check out the example [here](https://github.com/prashantgupta24/activity-tracker/blob/master/example/example.go)
+
+## Projects using this library
+
+- [automatic-mouse-mover](https://github.com/prashantgupta24/automatic-mouse-mover): a minimalistic go library/app to prevent your mac from going to sleep
+
 
 [version-badge]: https://img.shields.io/github/release/prashantgupta24/activity-tracker.svg
 [RELEASES]: https://github.com/prashantgupta24/activity-tracker/releases
