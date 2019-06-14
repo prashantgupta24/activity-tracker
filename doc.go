@@ -1,12 +1,12 @@
 /*
-It is a libary that lets you monitor certain activities on your machine, and then sends a heartbeat (explained later)
+It is a library that lets you monitor certain activities on your machine, and then sends a heartbeat (explained later)
 at a periodic (configurable) time detailing all the activity changes during that time. The activities that you want
 to track are monitored by pluggable handlers for those activities and can be added or removed according to
 your needs. An example of an activity is MouseCursorActivity, i.e. whether your mouse cursor was moved or not.
 
 Installation
 
-The libary can be installed using:
+The library can be installed using:
 
 	go get -u github.com/prashantgupta24/activity-tracker
 
@@ -84,7 +84,7 @@ and
 
 The activity tracker gives you a heartbeat object every 60 seconds, that is based on the
 'HeartbeatInterval'. But there is something else to understand here. In order for the
-tracker to know how many times an activity occured, like how many times you moved the
+tracker to know how many times an activity occurred, like how many times you moved the
 cursor for example, it needs to query the mouse position every 'x' seconds. That's
 where the 'WorkerInterval' comes into play.
 
@@ -106,7 +106,7 @@ whether the cursor moved. And it replied that the cursor had indeed moved everyt
 	Note : This is applicable only to pull-based handlers(discussed below). For push-based
 	handlers, 'WorkerInterval' does not matter.
 
-- If you want to know how many 'times' an activity occured within a heartbeat,
+- If you want to know how many 'times' an activity occurred within a heartbeat,
 you might want to set the 'WorkerInterval' to a low value, so that it keeps quering the handlers.
 
 - If you are just concerned whether any activity happened within a heartbeat or not,
@@ -123,7 +123,7 @@ handlers before that.
 Usecase
 
 Suppose you want to track Activities A, B and C on your machine, and you want to know
-how many times they occured every minute.
+how many times they occurred every minute.
 
 You want a report at the end of every minute saying 'Activity A' happened 5 times,
 'Activity B' happened 3 times and 'Activity C' happened 2 times.
@@ -156,10 +156,10 @@ It is the data packet sent from the tracker library to the user.
 
 'WasAnyActivity' tells if there was any activity within that time frame
 If there was, then the 'ActivityMap' will tell you what type of activity it was and
-what all times it occured.
+what all times it occurred.
 
 The 'Time' field is the time of the Heartbeat sent (not to be confused with
-the activity time, which is the time the activity occured within the 'heartbeat').
+the activity time, which is the time the activity occurred within the 'heartbeat').
 
 Tracker
 
