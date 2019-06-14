@@ -27,10 +27,10 @@ type Instance struct {
 
 WasAnyActivity tells if there was any activity within that time frame
 If there was, then the ActivityMap will tell you what type of activity
-it was and at what times it occured.
+it was and at what times it occurred.
 
 The Time field is the time of the Heartbeat sent (not to be confused with
-the activity time, which is the time the activity occured within the time frame)
+the activity time, which is the time the activity occurred within the time frame)
 */
 type Heartbeat struct {
 	WasAnyActivity bool
