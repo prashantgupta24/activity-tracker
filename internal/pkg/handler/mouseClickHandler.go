@@ -3,22 +3,22 @@ package handler
 import (
 	log "github.com/sirupsen/logrus"
 
-	"github.com/go-vgo/robotgo"
 	"github.com/prashantgupta24/activity-tracker/pkg/activity"
 	"github.com/prashantgupta24/activity-tracker/pkg/system"
+	hook "github.com/robotn/gohook"
 )
 
 const (
 	mouseClickActivity = activity.MouseClick
 )
 
-//MouseClickHandlerStruct is the handler for mouse clicks
+// MouseClickHandlerStruct is the handler for mouse clicks
 type MouseClickHandlerStruct struct {
 	clickHandlerLogger *log.Entry
 	tickerCh           chan struct{}
 }
 
-//Start the handler
+// Start the handler
 func (m *MouseClickHandlerStruct) Start(logger *log.Logger, activityCh chan *activity.Instance) {
 	m.tickerCh = make(chan struct{})
 	registrationFree := make(chan struct{})
@@ -49,12 +49,12 @@ func (m *MouseClickHandlerStruct) Start(logger *log.Logger, activityCh chan *act
 	}()
 }
 
-//MouseClickHandler returns an instance of the struct
+// MouseClickHandler returns an instance of the struct
 func MouseClickHandler() *MouseClickHandlerStruct {
 	return &MouseClickHandlerStruct{}
 }
 
-//Trigger the handler
+// Trigger the handler
 func (m *MouseClickHandlerStruct) Trigger(state system.State) {
 	//no point triggering the handler since the system is asleep
 	if state.IsSystemSleep {
@@ -69,12 +69,12 @@ func (m *MouseClickHandlerStruct) Trigger(state system.State) {
 	}
 }
 
-//Type returns the type of handler
+// Type returns the type of handler
 func (m *MouseClickHandlerStruct) Type() activity.Type {
 	return mouseClickActivity
 }
 
-//Close closes the handler
+// Close closes the handler
 func (m *MouseClickHandlerStruct) Close() {
 	close(m.tickerCh)
 }
@@ -83,7 +83,7 @@ func addMouseClickRegistration(logger *log.Entry, activityCh chan *activity.Inst
 	registrationFree chan struct{}) {
 
 	logger.Debugf("adding mouse left click registration \n")
-	mleft := robotgo.AddEvent("mleft")
+	mleft := hook.AddEvent("mleft")
 	if mleft {
 		logger.Debugf("mleft clicked \n")
 		activityCh <- &activity.Instance{
